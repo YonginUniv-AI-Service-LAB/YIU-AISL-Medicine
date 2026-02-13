@@ -12,6 +12,7 @@ import SignUpPage from '../Components/SignUpPage/SignUpPage';
 import ResetpasswordPage from '../Components/ResetpasswordPage/ResetpasswordPage';
 import PwdCompletePage from '../Components/ResetpasswordPage/pwd'; // ✅ 추가됨
 import HomeDetail from '../Components/homePage/HomePageDetail';
+import MedicinePage from './MedicinePage/MedicinePage';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -71,7 +72,7 @@ function MainTabs() {
       })}
     >
       <Tab.Screen name="Home" component={HomeDetail} />
-      <Tab.Screen name="Medicine" component={() => <View style={{ flex: 1, backgroundColor: '#f9f9f9' }} />} />
+      <Tab.Screen name="Medicine" component={MedicinePage} />
       <Tab.Screen name="Calendar" component={() => <View style={{ flex: 1, backgroundColor: '#f9f9f9' }} />} />
       <Tab.Screen name="Share" component={() => <View style={{ flex: 1, backgroundColor: '#f9f9f9' }} />} />
     </Tab.Navigator>

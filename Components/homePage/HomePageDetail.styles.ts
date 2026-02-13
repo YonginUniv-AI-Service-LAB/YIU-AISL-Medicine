@@ -1,7 +1,5 @@
-////반응형 유틸리티(wp, hp)**와 **중앙 정렬 레이아웃(contentWrapper)**이 아주 잘 구현
 import { StyleSheet, Dimensions } from 'react-native';
 
-// 1. 반응형 기준 정의 (iPhone 14/15 393x852 기준)
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const wp = (size: number) => (size / 393) * SCREEN_WIDTH;
 const hp = (size: number) => (size / 852) * SCREEN_HEIGHT;
@@ -11,8 +9,6 @@ export const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
   },
-  
-  // 헤더 영역 (SignUpPage 등과 높이/패딩 통일)
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -28,33 +24,35 @@ export const styles = StyleSheet.create({
   },
   headerRight: { 
     flexDirection: 'row', 
-    alignItems: 'center' 
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    width: wp(150), 
   },
   userName: { 
     fontFamily: 'Inter', 
     fontWeight: '600', 
     fontSize: wp(17), 
-    color: '#000000' 
+    color: '#000000',
+    textAlign: 'right',
   },
   dividerText: { 
     fontSize: wp(17), 
     color: '#000000', 
-    marginHorizontal: wp(8) 
+    width: wp(24),
+    textAlign: 'center',
   },
   menuIcon: { 
     width: wp(24), 
-    height: wp(24) 
+    height: wp(24),
+    resizeMode: 'contain'
   },
-
-  // 스크롤 및 중앙 정렬 컨테이너 (다른 페이지와 일관성 유지)
   scrollContent: { 
     paddingBottom: hp(50) 
   },
   contentWrapper: { 
-    paddingHorizontal: wp(20), // 프로젝트 공통 여백
+    paddingHorizontal: wp(20), 
     paddingTop: hp(20) 
   },
-
   titleSection: { 
     marginBottom: hp(30) 
   },
@@ -72,13 +70,10 @@ export const styles = StyleSheet.create({
     fontSize: wp(15), 
     color: '#1E1E1E' 
   },
-  
-  // 차트 카드 섹션
   chartCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: wp(24),
     paddingVertical: hp(24),
-    // 그림자 스타일 통일
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
@@ -104,17 +99,18 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 0, 
+    marginTop: hp(10), // 이 부분을 추가하여 텍스트를 아래로 내렸습니다.
   },
-  chartPercentText: {
+ chartPercentText: {
     fontFamily: 'Inter',
     fontWeight: '600',
     fontSize: wp(15),
-    lineHeight: hp(19),
+    // lineHeight를 텍스트 크기보다 크게 잡으면 
+    // 텍스트 줄 사이의 간격이 벌어지면서 % 숫자가 아래로 내려갑니다.
+    lineHeight: hp(26), 
     textAlign: 'center',
     color: '#1E1E1E',
   },
-
-  // 범례(Legend) 섹션
   legendContainer: { 
     paddingHorizontal: wp(20), 
     marginTop: hp(20) 

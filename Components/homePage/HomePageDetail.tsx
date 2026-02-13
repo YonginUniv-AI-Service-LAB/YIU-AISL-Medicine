@@ -1,4 +1,3 @@
-////반응형 유틸리티(wp, hp)**와 **중앙 정렬 레이아웃(contentWrapper)**이 아주 잘 구현
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -7,18 +6,16 @@ import { styles } from './HomePageDetail.styles';
 import MenuPopup from './MenuPopup'; 
 import SituationPopup from './SituationPopup';
 
-// 1. 반응형 유틸리티 정의
+// 반응형 유틸리티 정의
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const wp = (size: number) => (size / 393) * SCREEN_WIDTH;
-const hp = (size: number) => (size / 852) * Dimensions.get('window').height;
 
-// 차트 기준 상수 (반응형 적용)
+// 차트 기준 상수
 const RADIUS = wp(80);
 const CENTER = wp(90);
 
 const ChartSegment = ({ startAngle, endAngle, color, isSelected, onPress }: any) => {
   const getPathData = (s: number, e: number, r: number) => {
-    // 90도(CENTER)를 기준으로 경로 계산
     const x1 = CENTER + r * Math.cos((Math.PI * (s - 0.1)) / 180);
     const y1 = CENTER + r * Math.sin((Math.PI * (s - 0.1)) / 180);
     const x2 = CENTER + r * Math.cos((Math.PI * (e + 0.1)) / 180);
@@ -38,7 +35,6 @@ const ChartSegment = ({ startAngle, endAngle, color, isSelected, onPress }: any)
         stroke={color}
         strokeWidth="0.5"
       />
-      {/* 터치 영역 확장을 위한 투명 Path */}
       <Path
         d={getPathData(startAngle, endAngle, feedbackRadius)}
         fill="transparent"
@@ -81,7 +77,6 @@ export default function HomeDetailPage() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* 헤더 영역: 로고와 메뉴 버튼 */}
       <View style={styles.header}>
         <Image source={require('../../assets/images/Logo.png')} style={styles.headerLogo} />
         <View style={styles.headerRight}>
@@ -93,23 +88,17 @@ export default function HomeDetailPage() {
         </View>
       </View>
 
-      <ScrollView 
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* 모든 페이지와 일치시킨 여백 컨테이너 */}
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.contentWrapper}>
           <View style={styles.titleSection}>
             <Text style={styles.mainTitle}>오늘 먹을 약</Text>
             <Text style={styles.subTitle}>오늘은 ‘{maxSegment.label}’가 가장 많았어요.</Text>
           </View>
 
-          {/* 차트 카드 영역 */}
           <View style={styles.chartCard}>
             <Text style={styles.chartLabel}>오늘 복약 달성률 기록</Text>
 
             <View style={styles.chartCenterContainer}>
-              {/* SVG 크기도 wp를 적용하여 기기 대응 */}
               <Svg width={wp(260)} height={wp(260)} viewBox={`0 0 ${wp(180)} ${wp(180)}`}>
                 <G>
                   {chartSegments.map((seg, idx) => (
@@ -120,12 +109,10 @@ export default function HomeDetailPage() {
                       onPress={() => setSelectedIndex(idx)}
                     />
                   ))}
-                  {/* 중앙을 가리는 흰색 원 (도넛 차트 효과) */}
                   <Circle cx={CENTER} cy={CENTER} r={wp(46)} fill="white" />
                 </G>
               </Svg>
 
-              {/* 차트 중앙 텍스트 */}
               <View style={styles.chartTextOverlay} pointerEvents="none">
                 <Text style={styles.chartPercentText}>
                   <Text style={{ fontSize: wp(13), color: '#616161' }}>{segments[selectedIndex].label}</Text>
@@ -137,7 +124,6 @@ export default function HomeDetailPage() {
               </View>
             </View>
 
-            {/* 범례 리스트 */}
             <View style={styles.legendContainer}>
               {segments.map((item, index) => (
                 <TouchableOpacity
@@ -159,17 +145,10 @@ export default function HomeDetailPage() {
             </View>
           </View>
         </View>
-
         <View style={styles.bottomSpacer} />
       </ScrollView>
 
-      {/* 팝업 컴포넌트들 */}
-      <MenuPopup
-        visible={isMenuPopupVisible}
-        onClose={() => setIsMenuPopupVisible(false)}
-        onSelect={handleMenuSelect}
-      />
-
+      <MenuPopup visible={isMenuPopupVisible} onClose={() => setIsMenuPopupVisible(false)} onSelect={handleMenuSelect} />
       <SituationPopup
         visible={isSituationVisible}
         type={popupType}
