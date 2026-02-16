@@ -1,0 +1,460 @@
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  TextInput,
+  Image,
+  Modal,
+  Keyboard,
+  Pressable,
+} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+
+import styles from './AddSchedule.style';
+import { DAYS, HOURS } from './calendarData';
+import { useSchedule } from '../../contexts/ScheduleContext';
+
+const numbers = Array.from({ length: 12 }, (_, i) => i + 1);
+const hours24 = Array.from({ length: 24 }, (_, i) => i + 1);
+
+const weekDays = [
+  '월요일',
+  '화요일',
+  '수요일',
+  '목요일',
+  '금요일',
+  '토요일',
+  '일요일',
+  '전체 선택',
+];
+
+/* 24시간 → 캘린더 index 변환 (7AM 시작 기준) */
+const getCalendarIndex = (hour24: number) => {
+  const startHour = 7;
+  return (hour24 - startHour + 24) % 24;
+};
+
+const Radio = ({ active }: { active: boolean }) => (
+  <View
+    style={{
+      width: 14,
+      height: 14,
+      borderRadius: 7,
+      borderWidth: 2,
+      borderColor: active ? '#2F80FF' : '#CFCFCF',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: 6,
+    }}
+  >
+    {active && (
+      <View
+        style={{
+          width: 6,
+          height: 6,
+          borderRadius: 3,
+          backgroundColor: '#2F80FF',
+        }}
+      />
+    )}
+  </View>
+);
+
+const OptionBox = ({ title, children }: any) => (
+  <View
+    style={{
+      borderWidth: 1,
+      borderColor: '#E5E7EB',
+      borderRadius: 12,
+      padding: 14,
+      marginBottom: 14,
+    }}
+  >
+    <Text style={{ fontWeight: '600', marginBottom: 10 }}>{title}</Text>
+    {children}
+  </View>
+);
+
+const AddScheduleScreen: React.FC = () => {
+  const navigation = useNavigation();
+
+  /* ⭐⭐⭐ 여기로 이동 (핵심 수정) */
+  const { addSchedules } = useSchedule();
+
+  /* 미리보기용 */
+  const [selectedCells, setSelectedCells] = useState<string[]>([]);
+
+  const [modalVisible, setModalVisible] = useState(false);
+  const [doseCount, setDoseCount] = useState<number | null>(null);
+  const [doseHours, setDoseHours] = useState<number[]>([]);
+  const [doseDays, setDoseDays] = useState<string[]>([]);
+  const [dosePeriod, setDosePeriod] = useState<number | null>(null);
+  const [remainCount, setRemainCount] = useState<number | null>(null);
+
+  const [doseCountInput, setDoseCountInput] = useState('');
+  const [dosePeriodInput, setDosePeriodInput] = useState('');
+  const [remainInput, setRemainInput] = useState('');
+
+  const toggleDay = (day: string) => {
+    if (day === '전체 선택') {
+      setDoseDays(doseDays.length === 7 ? [] : weekDays.slice(0, 7));
+      return;
+    }
+    if (doseDays.includes(day)) setDoseDays(doseDays.filter((d) => d !== day));
+    else setDoseDays([...doseDays, day]);
+  };
+
+  const toggleHour = (hour: number) => {
+    if (doseHours.includes(hour))
+      setDoseHours(doseHours.filter((h) => h !== hour));
+    else setDoseHours([...doseHours, hour]);
+  };
+
+  /* 변경하기 → 미리보기 */
+  const applySchedule = () => {
+    if (doseHours.length === 0 || doseDays.length === 0) {
+      setModalVisible(false);
+      return;
+    }
+
+    const newCells: string[] = [];
+
+    doseDays.forEach((day) => {
+      const dayIndex = DAYS.findIndex((d) => day.startsWith(d[0]));
+      if (dayIndex === -1) return;
+
+      doseHours.forEach((hour) => {
+        const hourIndex = getCalendarIndex(hour);
+        newCells.push(`${dayIndex}-${hourIndex}`);
+      });
+    });
+
+    setSelectedCells([...new Set(newCells)]);
+    setModalVisible(false);
+  };
+
+  /* ⭐ 완료 → 실제 저장 */
+  const saveSchedule = () => {
+    if (selectedCells.length > 0) {
+      const converted = selectedCells.map((cell) => {
+        const [dayIndex, hourIndex] = cell.split('-').map(Number);
+
+        return {
+          dayIndex,
+          hourIndex,
+        };
+      });
+
+      addSchedules(converted);
+    }
+
+    navigation.goBack();
+  };
+
+  return (
+    <View style={styles.container}>
+      {/* 헤더 */}
+      <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.left}
+        >
+          <Text style={styles.close}>✕</Text>
+        </TouchableOpacity>
+
+        <View style={styles.center}>
+          <Text style={styles.title}>약 복용 일정 추가</Text>
+        </View>
+
+        <View style={styles.right}>
+          <TouchableOpacity style={styles.doneBtn} onPress={saveSchedule}>
+            <Text style={styles.doneText}>완료</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* 시간표 */}
+      <View style={styles.tableArea}>
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <View style={styles.dayRow}>
+            <View style={styles.corner} />
+            {DAYS.map((d) => (
+              <Text key={d} style={styles.dayText}>
+                {d}
+              </Text>
+            ))}
+          </View>
+
+          {HOURS.map((hour, hourIndex) => (
+            <View key={`row-${hourIndex}`} style={styles.row}>
+              <Text style={styles.time}>{hour}</Text>
+
+              {DAYS.map((day, dayIndex) => {
+                const key = `${dayIndex}-${hourIndex}`;
+                return (
+                  <View
+                    key={key}
+                    style={[
+                      styles.cell,
+                      selectedCells.includes(key) && styles.activeCell,
+                    ]}
+                  />
+                );
+              })}
+            </View>
+          ))}
+        </ScrollView>
+      </View>
+
+      {/* 입력폼 */}
+      <View style={styles.form}>
+        <Text style={styles.label}>약 이름:</Text>
+        <TextInput style={styles.input} />
+
+        <Text style={styles.label}>카테고리:</Text>
+        <TextInput style={styles.input} />
+
+        <TouchableOpacity
+          style={styles.labelRow}
+          onPress={() => setModalVisible(true)}
+        >
+          <Text style={styles.label}>복용</Text>
+          <Image
+            source={require('../../assets/images/calendar/under.png')}
+            style={styles.dropdownIcon}
+          />
+        </TouchableOpacity>
+
+        <Text style={styles.label}>주의 사항:</Text>
+        <TextInput style={styles.input} multiline />
+      </View>
+
+      {/* 모달 */}
+      <Modal visible={modalVisible} transparent animationType="slide">
+        <Pressable
+          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.35)' }}
+          onPress={Keyboard.dismiss}
+        >
+          <Pressable
+            style={{
+              marginTop: 'auto',
+              backgroundColor: '#fff',
+              borderTopLeftRadius: 20,
+              borderTopRightRadius: 20,
+              padding: 20,
+            }}
+          >
+            <ScrollView keyboardShouldPersistTaps="handled">
+              {/* 복용 횟수 */}
+              <OptionBox title="복용 횟수">
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                  {numbers.map((n) => (
+                    <TouchableOpacity
+                      key={n}
+                      style={{
+                        width: '16.66%',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        marginBottom: 10,
+                      }}
+                      onPress={() => {
+                        setDoseCount(n);
+                        setDoseCountInput('');
+                      }}
+                    >
+                      <Radio active={doseCount === n} />
+                      <Text>{n}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    marginTop: 8,
+                  }}
+                >
+                  <Text style={{ marginRight: 8 }}>직접입력:</Text>
+                  <TextInput
+                    value={doseCountInput}
+                    onChangeText={(t) => {
+                      setDoseCount(null);
+                      setDoseCountInput(t);
+                    }}
+                    keyboardType="numeric"
+                    style={{
+                      borderBottomWidth: 1,
+                      borderColor: '#ccc',
+                      width: 80,
+                    }}
+                  />
+                </View>
+              </OptionBox>
+
+              {/* ⭐ 복용 시간 (다중 선택) */}
+              <OptionBox title="복용 시간">
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                  {hours24.map((n) => (
+                    <TouchableOpacity
+                      key={n}
+                      style={{
+                        width: '12.5%',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        marginBottom: 10,
+                      }}
+                      onPress={() => toggleHour(n)}
+                    >
+                      <Radio active={doseHours.includes(n)} />
+                      <Text>{n}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </OptionBox>
+
+              {/* 복용 간격 */}
+              <OptionBox title="복용 간격">
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                  {weekDays.map((d) => (
+                    <TouchableOpacity
+                      key={d}
+                      style={{
+                        width: '25%',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        marginBottom: 10,
+                      }}
+                      onPress={() => toggleDay(d)}
+                    >
+                      <Radio
+                        active={
+                          d === '전체 선택'
+                            ? doseDays.length === 7
+                            : doseDays.includes(d)
+                        }
+                      />
+                      <Text>{d}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </OptionBox>
+
+              {/* 복용 기간 */}
+              <OptionBox title="복용 기간">
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                  {numbers.map((n) => (
+                    <TouchableOpacity
+                      key={n}
+                      style={{
+                        width: '16.66%',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        marginBottom: 10,
+                      }}
+                      onPress={() => {
+                        setDosePeriod(n);
+                        setDosePeriodInput('');
+                      }}
+                    >
+                      <Radio active={dosePeriod === n} />
+                      <Text>{n}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    marginTop: 8,
+                  }}
+                >
+                  <Text style={{ marginRight: 8 }}>직접입력:</Text>
+                  <TextInput
+                    value={dosePeriodInput}
+                    onChangeText={(t) => {
+                      setDosePeriod(null);
+                      setDosePeriodInput(t);
+                    }}
+                    keyboardType="numeric"
+                    style={{
+                      borderBottomWidth: 1,
+                      borderColor: '#ccc',
+                      width: 80,
+                    }}
+                  />
+                </View>
+              </OptionBox>
+
+              {/* 남은 복용 횟수 */}
+              <OptionBox title="남은 복용 횟수">
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                  {numbers.map((n) => (
+                    <TouchableOpacity
+                      key={n}
+                      style={{
+                        width: '16.66%',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        marginBottom: 10,
+                      }}
+                      onPress={() => {
+                        setRemainCount(n);
+                        setRemainInput('');
+                      }}
+                    >
+                      <Radio active={remainCount === n} />
+                      <Text>{n}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    marginTop: 8,
+                  }}
+                >
+                  <Text style={{ marginRight: 8 }}>직접입력:</Text>
+                  <TextInput
+                    value={remainInput}
+                    onChangeText={(t) => {
+                      setRemainCount(null);
+                      setRemainInput(t);
+                    }}
+                    keyboardType="numeric"
+                    style={{
+                      borderBottomWidth: 1,
+                      borderColor: '#ccc',
+                      width: 80,
+                    }}
+                  />
+                </View>
+              </OptionBox>
+
+              <TouchableOpacity
+                onPress={applySchedule}
+                style={{
+                  backgroundColor: '#2F80FF',
+                  padding: 14,
+                  borderRadius: 30,
+                  alignItems: 'center',
+                }}
+              >
+                <Text style={{ color: '#fff', fontWeight: '600' }}>
+                  변경하기
+                </Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </Pressable>
+        </Pressable>
+      </Modal>
+    </View>
+  );
+};
+
+export default AddScheduleScreen;

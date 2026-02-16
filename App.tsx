@@ -1,14 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import * as SplashScreen from 'expo-splash-screen';
-import { 
-  useFonts, 
-  Inter_400Regular, 
-  Inter_500Medium, 
-  Inter_600SemiBold, 
-  Inter_700Bold 
+import {
+  useFonts,
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
 } from '@expo-google-fonts/inter';
-import RootNavigator from './Components/Navigation';
 
+import RootNavigator from './Components/Navigation';
+import { ScheduleProvider } from './contexts/ScheduleContext';
+import { View } from 'react-native';
+
+// 자동 숨김 방지 (앱 시작 시 1회)
 SplashScreen.preventAutoHideAsync();
 
 export default function App() {
@@ -19,13 +23,20 @@ export default function App() {
     Inter_700Bold,
   });
 
-  useEffect(() => {
+  /** 폰트 로딩 완료되면 스플래시 제거 */
+  const onLayoutRootView = useCallback(async () => {
     if (fontsLoaded) {
-      SplashScreen.hideAsync();
+      await SplashScreen.hideAsync();
     }
   }, [fontsLoaded]);
 
   if (!fontsLoaded) return null;
 
-  return <RootNavigator />;
+  return (
+    <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+      <ScheduleProvider>
+        <RootNavigator />
+      </ScheduleProvider>
+    </View>
+  );
 }
