@@ -17,58 +17,58 @@ export const styles = StyleSheet.create({
     height: hp(64),
     marginTop: hp(10),
   },
-  headerLogo: { 
-    width: wp(100), 
+  headerLogo: {
+    width: wp(100),
     height: hp(36),
-    resizeMode: 'contain' 
+    resizeMode: 'contain',
   },
-  headerRight: { 
-    flexDirection: 'row', 
+  headerRight: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-end',
-    width: wp(150), 
+    width: wp(150),
   },
-  userName: { 
-    fontFamily: 'Inter', 
-    fontWeight: '600', 
-    fontSize: wp(17), 
+  userName: {
+    fontFamily: 'Inter',
+    fontWeight: '600',
+    fontSize: wp(17),
     color: '#000000',
     textAlign: 'right',
   },
-  dividerText: { 
-    fontSize: wp(17), 
-    color: '#000000', 
+  dividerText: {
+    fontSize: wp(17),
+    color: '#000000',
     width: wp(24),
     textAlign: 'center',
   },
-  menuIcon: { 
-    width: wp(24), 
+  menuIcon: {
+    width: wp(24),
     height: wp(24),
-    resizeMode: 'contain'
+    resizeMode: 'contain',
   },
-  scrollContent: { 
-    paddingBottom: hp(50) 
+  scrollContent: {
+    paddingBottom: hp(50),
   },
-  contentWrapper: { 
-    paddingHorizontal: wp(20), 
-    paddingTop: hp(20) 
+  contentWrapper: {
+    paddingHorizontal: wp(20),
+    paddingTop: hp(20),
   },
-  titleSection: { 
-    marginBottom: hp(30) 
+  titleSection: {
+    marginBottom: hp(30),
   },
-  mainTitle: { 
-    fontFamily: 'Inter', 
-    fontWeight: '500', 
-    fontSize: wp(30), 
-    lineHeight: hp(38), 
+  mainTitle: {
+    fontFamily: 'Inter',
+    fontWeight: '500',
+    fontSize: wp(30),
+    lineHeight: hp(38),
     color: '#000000',
     marginBottom: hp(8),
   },
-  subTitle: { 
-    fontFamily: 'Inter', 
-    fontWeight: '600', 
-    fontSize: wp(15), 
-    color: '#1E1E1E' 
+  subTitle: {
+    fontFamily: 'Inter',
+    fontWeight: '600',
+    fontSize: wp(15),
+    color: '#1E1E1E',
   },
   chartCard: {
     backgroundColor: '#FFFFFF',
@@ -80,11 +80,11 @@ export const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 3,
   },
-  chartLabel: { 
-    fontFamily: 'Inter', 
-    fontWeight: '700', 
-    fontSize: wp(13), 
-    color: '#1E1E1E', 
+  chartLabel: {
+    fontFamily: 'Inter',
+    fontWeight: '700',
+    fontSize: wp(13),
+    color: '#1E1E1E',
     marginBottom: hp(20),
     paddingHorizontal: wp(20),
   },
@@ -98,52 +98,52 @@ export const styles = StyleSheet.create({
     position: 'absolute',
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 0, 
+    zIndex: 0,
     marginTop: hp(10), // 이 부분을 추가하여 텍스트를 아래로 내렸습니다.
   },
- chartPercentText: {
+  chartPercentText: {
     fontFamily: 'Inter',
     fontWeight: '600',
     fontSize: wp(15),
-    // lineHeight를 텍스트 크기보다 크게 잡으면 
+    // lineHeight를 텍스트 크기보다 크게 잡으면
     // 텍스트 줄 사이의 간격이 벌어지면서 % 숫자가 아래로 내려갑니다.
-    lineHeight: hp(26), 
+    lineHeight: hp(26),
     textAlign: 'center',
     color: '#1E1E1E',
   },
-  legendContainer: { 
-    paddingHorizontal: wp(20), 
-    marginTop: hp(20) 
+  legendContainer: {
+    paddingHorizontal: wp(20),
+    marginTop: hp(20),
   },
-  legendItem: { 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    alignItems: 'center', 
-    height: hp(44) 
+  legendItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    height: hp(44),
   },
-  dot: { 
-    width: wp(8), 
-    height: wp(8), 
-    borderRadius: wp(4), 
-    marginRight: wp(10) 
+  dot: {
+    width: wp(8),
+    height: wp(8),
+    borderRadius: wp(4),
+    marginRight: wp(10),
   },
-  legendLabel: { 
-    fontFamily: 'Inter', 
-    fontSize: wp(13), 
-    color: '#1E1E1E', 
-    marginRight: wp(8) 
+  legendLabel: {
+    fontFamily: 'Inter',
+    fontSize: wp(13),
+    color: '#1E1E1E',
+    marginRight: wp(8),
   },
-  legendValue: { 
-    fontFamily: 'Inter', 
-    fontSize: wp(13), 
-    color: '#979797' 
+  legendValue: {
+    fontFamily: 'Inter',
+    fontSize: wp(13),
+    color: '#979797',
   },
-  legendDetail: { 
-    fontFamily: 'Inter', 
-    fontSize: wp(13), 
-    color: '#1E1E1E' 
+  legendDetail: {
+    fontFamily: 'Inter',
+    fontSize: wp(13),
+    color: '#1E1E1E',
   },
-  bottomSpacer: { 
-    height: hp(100) 
+  bottomSpacer: {
+    height: hp(100),
   },
 });

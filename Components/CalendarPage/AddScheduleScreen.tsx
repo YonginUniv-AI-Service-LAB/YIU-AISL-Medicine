@@ -15,8 +15,10 @@ import { useNavigation } from '@react-navigation/native';
 import styles from './AddSchedule.style';
 import { DAYS, HOURS } from './calendarData';
 import { useSchedule } from '../../contexts/ScheduleContext';
+import { useMedicine } from '../../contexts/MedicineContext';
 
 const numbers = Array.from({ length: 12 }, (_, i) => i + 1);
+const doseCountNumbers = [1, 2, 3];
 const hours24 = Array.from({ length: 24 }, (_, i) => i + 1);
 
 const weekDays = [
@@ -73,7 +75,7 @@ const OptionBox = ({ title, children }: any) => (
     }}
   >
     <Text style={{ fontWeight: '600', marginBottom: 10 }}>{title}</Text>
-    {children}
+    {typeof children === 'string' ? <Text>{children}</Text> : children}
   </View>
 );
 
@@ -82,8 +84,12 @@ const AddScheduleScreen: React.FC = () => {
 
   /* ⭐⭐⭐ 여기로 이동 (핵심 수정) */
   const { addSchedules } = useSchedule();
+  const { addMedicine } = useMedicine(); // ⭐ 추가
 
   /* 미리보기용 */
+  const [medicineName, setMedicineName] = useState('');
+  const [memo, setMemo] = useState('');
+
   const [selectedCells, setSelectedCells] = useState<string[]>([]);
 
   const [modalVisible, setModalVisible] = useState(false);
@@ -96,6 +102,7 @@ const AddScheduleScreen: React.FC = () => {
   const [doseCountInput, setDoseCountInput] = useState('');
   const [dosePeriodInput, setDosePeriodInput] = useState('');
   const [remainInput, setRemainInput] = useState('');
+  const [category, setCategory] = useState('');
 
   const toggleDay = (day: string) => {
     if (day === '전체 선택') {
@@ -112,7 +119,6 @@ const AddScheduleScreen: React.FC = () => {
     else setDoseHours([...doseHours, hour]);
   };
 
-  /* 변경하기 → 미리보기 */
   const applySchedule = () => {
     if (doseHours.length === 0 || doseDays.length === 0) {
       setModalVisible(false);
@@ -135,13 +141,45 @@ const AddScheduleScreen: React.FC = () => {
     setModalVisible(false);
   };
 
-  /* ⭐ 완료 → 실제 저장 */
+  /* 변경하기 → 미리보기 */
   const saveSchedule = () => {
+    const medicineId = Date.now().toString();
+
+    const today =
+      new Date().getFullYear() +
+      '-' +
+      String(new Date().getMonth() + 1).padStart(2, '0') +
+      '-' +
+      String(new Date().getDate()).padStart(2, '0');
+
+    // 시간 문자열
+    const times = doseHours.map((h) => `${String(h).padStart(2, '0')}:00`);
+    const days = doseDays.map((d) => d[0]);
+
+    // 복용횟수 계산
+    const count = doseCount ?? Number(doseCountInput) ?? times.length;
+
+    // ---------------- 카드 저장 ----------------
+    addMedicine({
+      id: medicineId,
+      name: medicineName || '약 이름 없음',
+      category: category || '미분류',
+      count,
+      times,
+      days,
+      period: dosePeriod ?? undefined,
+      remain: remainCount ?? undefined,
+      memo: memo,
+      date: today,
+      status: 'before',
+    });
+
+    // ---------------- 캘린더 저장 ----------------
     if (selectedCells.length > 0) {
       const converted = selectedCells.map((cell) => {
         const [dayIndex, hourIndex] = cell.split('-').map(Number);
-
         return {
+          medicineId,
           dayIndex,
           hourIndex,
         };
@@ -211,10 +249,18 @@ const AddScheduleScreen: React.FC = () => {
       {/* 입력폼 */}
       <View style={styles.form}>
         <Text style={styles.label}>약 이름:</Text>
-        <TextInput style={styles.input} />
+        <TextInput
+          style={styles.input}
+          value={medicineName}
+          onChangeText={setMedicineName}
+        />
 
         <Text style={styles.label}>카테고리:</Text>
-        <TextInput style={styles.input} />
+        <TextInput
+          style={styles.input}
+          value={category}
+          onChangeText={setCategory}
+        />
 
         <TouchableOpacity
           style={styles.labelRow}
@@ -228,7 +274,12 @@ const AddScheduleScreen: React.FC = () => {
         </TouchableOpacity>
 
         <Text style={styles.label}>주의 사항:</Text>
-        <TextInput style={styles.input} multiline />
+        <TextInput
+          style={styles.input}
+          multiline
+          value={memo}
+          onChangeText={setMemo}
+        />
       </View>
 
       {/* 모달 */}
@@ -248,9 +299,9 @@ const AddScheduleScreen: React.FC = () => {
           >
             <ScrollView keyboardShouldPersistTaps="handled">
               {/* 복용 횟수 */}
-              <OptionBox title="복용 횟수">
+              <OptionBox title="하루 복용 횟수">
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-                  {numbers.map((n) => (
+                  {doseCountNumbers.map((n) => (
                     <TouchableOpacity
                       key={n}
                       style={{
@@ -437,7 +488,7 @@ const AddScheduleScreen: React.FC = () => {
               </OptionBox>
 
               <TouchableOpacity
-                onPress={applySchedule}
+                onPress={() => applySchedule()}
                 style={{
                   backgroundColor: '#2F80FF',
                   padding: 14,

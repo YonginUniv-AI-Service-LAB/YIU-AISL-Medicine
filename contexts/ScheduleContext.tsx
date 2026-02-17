@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState } from 'react';
 
-type Schedule = {
+export type Schedule = {
+  medicineId: string; // ⭐ 약과 연결
   dayIndex: number;
   hourIndex: number;
 };
@@ -8,17 +9,19 @@ type Schedule = {
 type ScheduleContextType = {
   schedules: Schedule[];
   addSchedules: (newSchedules: Schedule[]) => void;
+  removeSchedulesByMedicineId: (medicineId: string) => void; // ⭐ 삭제용
 };
 
 const ScheduleContext = createContext<ScheduleContextType>({
   schedules: [],
   addSchedules: () => {},
+  removeSchedulesByMedicineId: () => {},
 });
 
 export const ScheduleProvider = ({ children }: any) => {
   const [schedules, setSchedules] = useState<Schedule[]>([]);
 
-  // ⭐ 여러개 추가 (덮어쓰기 아님, 누적)
+  // 일정 추가
   const addSchedules = (newSchedules: Schedule[]) => {
     setSchedules((prev) => {
       const merged = [...prev, ...newSchedules];
@@ -29,7 +32,9 @@ export const ScheduleProvider = ({ children }: any) => {
           index ===
           self.findIndex(
             (s) =>
-              s.dayIndex === item.dayIndex && s.hourIndex === item.hourIndex,
+              s.dayIndex === item.dayIndex &&
+              s.hourIndex === item.hourIndex &&
+              s.medicineId === item.medicineId,
           ),
       );
 
@@ -37,8 +42,15 @@ export const ScheduleProvider = ({ children }: any) => {
     });
   };
 
+  // ⭐ 약 삭제시 캘린더도 삭제
+  const removeSchedulesByMedicineId = (medicineId: string) => {
+    setSchedules((prev) => prev.filter((s) => s.medicineId !== medicineId));
+  };
+
   return (
-    <ScheduleContext.Provider value={{ schedules, addSchedules }}>
+    <ScheduleContext.Provider
+      value={{ schedules, addSchedules, removeSchedulesByMedicineId }}
+    >
       {children}
     </ScheduleContext.Provider>
   );

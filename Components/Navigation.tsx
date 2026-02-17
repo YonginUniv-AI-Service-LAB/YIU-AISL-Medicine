@@ -24,8 +24,11 @@ import HomeDetail from '../Components/homePage/HomePageDetail';
 import MedicinePage from './MedicinePage/MedicinePage';
 import CalendarScreen from '../Components/CalendarPage/calendar';
 
-// ⭐ 추가 (일정 추가 모달)
+// ⭐ 일정 추가 모달
 import AddScheduleScreen from '../Components/CalendarPage/AddScheduleScreen';
+
+// ⭐ 추가 (전역 약 데이터 저장소)
+import { MedicineProvider } from '../contexts/MedicineContext';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -128,42 +131,45 @@ export default function RootNavigator() {
 
   return (
     <SafeAreaProvider>
-      <NavigationContainer>
-        <View style={{ flex: 1 }}>
-          <StatusBar
-            barStyle={isIOS ? 'dark-content' : 'default'}
-            backgroundColor="transparent"
-            translucent
-          />
-
-          {/* 메인 스택 */}
-          <Stack.Navigator
-            initialRouteName="Main"
-            screenOptions={{ headerShown: false }}
-          >
-            <Stack.Screen name="LoginPage" component={LoginPage} />
-            <Stack.Screen name="SignUp" component={SignUpPage} />
-            <Stack.Screen
-              name="ResetpasswordPage"
-              component={ResetpasswordPage}
+      {/* ⭐ 여기만 추가됨 */}
+      <MedicineProvider>
+        <NavigationContainer>
+          <View style={{ flex: 1 }}>
+            <StatusBar
+              barStyle={isIOS ? 'dark-content' : 'default'}
+              backgroundColor="transparent"
+              translucent
             />
-            <Stack.Screen name="pwd" component={PwdCompletePage} />
 
-            {/* 탭 */}
-            <Stack.Screen name="Main" component={MainTabs} />
+            {/* 메인 스택 */}
+            <Stack.Navigator
+              initialRouteName="Main"
+              screenOptions={{ headerShown: false }}
+            >
+              <Stack.Screen name="LoginPage" component={LoginPage} />
+              <Stack.Screen name="SignUp" component={SignUpPage} />
+              <Stack.Screen
+                name="ResetpasswordPage"
+                component={ResetpasswordPage}
+              />
+              <Stack.Screen name="pwd" component={PwdCompletePage} />
 
-            {/* ⭐ 모달 화면 */}
-            <Stack.Screen
-              name="AddSchedule"
-              component={AddScheduleScreen}
-              options={{
-                presentation: 'modal',
-                animation: 'slide_from_bottom',
-              }}
-            />
-          </Stack.Navigator>
-        </View>
-      </NavigationContainer>
+              {/* 탭 */}
+              <Stack.Screen name="Main" component={MainTabs} />
+
+              {/* ⭐ 모달 화면 */}
+              <Stack.Screen
+                name="AddSchedule"
+                component={AddScheduleScreen}
+                options={{
+                  presentation: 'modal',
+                  animation: 'slide_from_bottom',
+                }}
+              />
+            </Stack.Navigator>
+          </View>
+        </NavigationContainer>
+      </MedicineProvider>
     </SafeAreaProvider>
   );
 }

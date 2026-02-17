@@ -10,6 +10,7 @@ import {
 
 import RootNavigator from './Components/Navigation';
 import { ScheduleProvider } from './contexts/ScheduleContext';
+import { MedicineProvider } from './contexts/MedicineContext';
 import { View } from 'react-native';
 
 // 자동 숨김 방지 (앱 시작 시 1회)
@@ -35,7 +36,9 @@ export default function App() {
   return (
     <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
       <ScheduleProvider>
-        <RootNavigator />
+        <MedicineProvider>
+          <RootNavigator />
+        </MedicineProvider>
       </ScheduleProvider>
     </View>
   );
