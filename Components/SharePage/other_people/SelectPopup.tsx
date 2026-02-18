@@ -15,7 +15,7 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
 } from 'react-native';
-import { styles } from './SelectPopup.styles';
+import { styles } from './SelectPopup.style';
 
 interface Props {
   visible: boolean;

@@ -90,9 +90,9 @@ export const styles = StyleSheet.create({
     color: '#C0ADAD',
   },
 
+  /* ✅ 방명록 섹션 레이아웃 */
   guestRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     marginHorizontal: wp(20),
     marginTop: hp(30),
@@ -103,20 +103,53 @@ export const styles = StyleSheet.create({
     fontFamily: 'Inter',
     fontWeight: '600',
     color: '#D9D9D9',
+    marginRight: wp(4), // 👈 12에서 4로 줄여서 아이콘이 더 가까이 붙게 함
   },
 
-  guestIcon: {
-    width: wp(20),
-    height: wp(18),
+  editIconWrapper: {
+    padding: wp(4),
+    marginLeft: wp(-2), // 👈 살짝 음수 마진을 주어 왼쪽으로 더 당김 (필요시 조절)
+  },
+
+  editIcon: {
+    width: wp(22),
+    height: wp(22),
     resizeMode: 'contain',
   },
-  divider: {
-  fontFamily: 'Inter',
-  fontWeight: '600',
-  fontSize: wp(17),
-  lineHeight: hp(22),
-  color: '#000000',
-  marginHorizontal: wp(4), // 양쪽 간격
-},
 
+  /* ✅ 캘린더 아이콘 위치 조정 */
+  calendarIconWrapper: {
+    padding: wp(4),
+    // 👈 아이콘을 왼쪽으로 당겼으므로, 캘린더와의 사이 간격을 확보하기 위해 marginLeft 조정
+    // 기존 wp(200)에서 디자인에 맞춰 약 160~180 정도로 유동적으로 조절하세요.
+    marginLeft: wp(210), 
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  calendarIcon: {
+    width: wp(18),
+    height: wp(20),
+    resizeMode: 'contain',
+  },
+
+  friendListIconWrapper: {
+    marginLeft: 'auto', 
+    padding: wp(4),
+  },
+
+  friendListIcon: {
+    width: wp(24),
+    height: wp(24),
+    resizeMode: 'contain',
+  },
+
+  divider: {
+    fontFamily: 'Inter',
+    fontWeight: '600',
+    fontSize: wp(17),
+    lineHeight: hp(22),
+    color: '#000000',
+    marginHorizontal: wp(4),
+  },
 });
