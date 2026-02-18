@@ -77,18 +77,24 @@ export default function HomeDetailPage() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Image source={require('../../assets/images/Logo.png')} style={styles.headerLogo} />
-        <View style={styles.headerRight}>
-          <Text style={styles.userName}>000님</Text>
-          <Text style={styles.dividerText}>|</Text>
-          <TouchableOpacity onPress={() => setIsMenuPopupVisible(prev => !prev)}>
-            <Image source={require('../../assets/images/menu.png')} style={styles.menuIcon} />
-          </TouchableOpacity>
+      {/* ScrollView가 전체를 감싸도록 설정하여 내부 요소들이 모두 스크롤에 반응하게 함 */}
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent} 
+        showsVerticalScrollIndicator={false}
+      >
+        {/* ⭐ 헤더 영역: 로고이미지랑 000님 | 메뉴이미지를 스크롤 뷰 상단에 배치 */}
+        <View style={styles.header}>
+          <Image source={require('../../assets/images/Logo.png')} style={styles.headerLogo} />
+          <View style={styles.headerRight}>
+            <Text style={styles.userName}>000님</Text>
+            <Text style={styles.dividerText}>|</Text>
+            <TouchableOpacity onPress={() => setIsMenuPopupVisible(prev => !prev)}>
+              <Image source={require('../../assets/images/menu.png')} style={styles.menuIcon} />
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* 컨텐츠 영역 */}
         <View style={styles.contentWrapper}>
           <View style={styles.titleSection}>
             <Text style={styles.mainTitle}>오늘 먹을 약</Text>
@@ -145,10 +151,17 @@ export default function HomeDetailPage() {
             </View>
           </View>
         </View>
+        
+        {/* 하단 탭 바 등에 가려지지 않게 여유 공간 확보 */}
         <View style={styles.bottomSpacer} />
       </ScrollView>
 
-      <MenuPopup visible={isMenuPopupVisible} onClose={() => setIsMenuPopupVisible(false)} onSelect={handleMenuSelect} />
+      {/* 모달 팝업은 스크롤과 무관하게 전체 화면을 덮도록 SafeAreaView 하단에 유지 */}
+      <MenuPopup 
+        visible={isMenuPopupVisible} 
+        onClose={() => setIsMenuPopupVisible(false)} 
+        onSelect={handleMenuSelect} 
+      />
       <SituationPopup
         visible={isSituationVisible}
         type={popupType}

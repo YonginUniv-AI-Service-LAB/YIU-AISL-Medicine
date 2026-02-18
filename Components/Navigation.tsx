@@ -15,7 +15,7 @@ import {
   SafeAreaProvider,
 } from 'react-native-safe-area-context';
 
-// 페이지
+// 페이지 임포트
 import LoginPage from '../Components/LoginPage/LoginPage';
 import SignUpPage from '../Components/SignUpPage/SignUpPage';
 import ResetpasswordPage from '../Components/ResetpasswordPage/ResetpasswordPage';
@@ -23,11 +23,8 @@ import PwdCompletePage from '../Components/ResetpasswordPage/pwd';
 import HomeDetail from '../Components/homePage/HomePageDetail';
 import MedicinePage from './MedicinePage/MedicinePage';
 import CalendarScreen from '../Components/CalendarPage/calendar';
-
-// ⭐ 일정 추가 모달
+import SharePage from './SharePage/SharePage';
 import AddScheduleScreen from '../Components/CalendarPage/AddScheduleScreen';
-
-// ⭐ 추가 (전역 약 데이터 저장소)
 import { MedicineProvider } from '../contexts/MedicineContext';
 
 const Stack = createNativeStackNavigator();
@@ -57,16 +54,10 @@ function MainTabs() {
   const isIOS = Platform.OS === 'ios';
 
   let baseHeight = isIOS
-    ? sizeCategory === 'smallPhone'
-      ? 40
-      : sizeCategory === 'tablet'
-        ? 60
-        : 50
+    ? sizeCategory === 'smallPhone' ? 40 : sizeCategory === 'tablet' ? 60 : 50
     : 50;
 
-  const extra =
-    sizeCategory === 'tablet' ? 10 : sizeCategory === 'smallPhone' ? -5 : 0;
-
+  const extra = sizeCategory === 'tablet' ? 10 : sizeCategory === 'smallPhone' ? -5 : 0;
   const TAB_BAR_HEIGHT = baseHeight + insets.bottom + extra;
 
   return (
@@ -88,20 +79,11 @@ function MainTabs() {
         tabBarIcon: ({ focused }) => {
           let src;
           switch (route.name) {
-            case 'Home':
-              src = focused ? ICONS.afterHome : ICONS.beforeHome;
-              break;
-            case 'Medicine':
-              src = focused ? ICONS.afterMedicine : ICONS.beforeMedicine;
-              break;
-            case 'Calendar':
-              src = focused ? ICONS.afterCalendar : ICONS.beforeCalendar;
-              break;
-            case 'Share':
-              src = focused ? ICONS.afterShare : ICONS.beforeShare;
-              break;
-            default:
-              src = ICONS.beforeHome;
+            case 'Home': src = focused ? ICONS.afterHome : ICONS.beforeHome; break;
+            case 'Medicine': src = focused ? ICONS.afterMedicine : ICONS.beforeMedicine; break;
+            case 'Calendar': src = focused ? ICONS.afterCalendar : ICONS.beforeCalendar; break;
+            case 'Share': src = focused ? ICONS.afterShare : ICONS.beforeShare; break;
+            default: src = ICONS.beforeHome;
           }
           return (
             <Image
@@ -116,12 +98,7 @@ function MainTabs() {
       <Tab.Screen name="Home" component={HomeDetail} />
       <Tab.Screen name="Medicine" component={MedicinePage} />
       <Tab.Screen name="Calendar" component={CalendarScreen} />
-      <Tab.Screen
-        name="Share"
-        component={() => (
-          <View style={{ flex: 1, backgroundColor: '#f9f9f9' }} />
-        )}
-      />
+      <Tab.Screen name="Share" component={SharePage} />
     </Tab.Navigator>
   );
 }
@@ -131,7 +108,6 @@ export default function RootNavigator() {
 
   return (
     <SafeAreaProvider>
-      {/* ⭐ 여기만 추가됨 */}
       <MedicineProvider>
         <NavigationContainer>
           <View style={{ flex: 1 }}>
@@ -141,23 +117,18 @@ export default function RootNavigator() {
               translucent
             />
 
-            {/* 메인 스택 */}
             <Stack.Navigator
               initialRouteName="Main"
               screenOptions={{ headerShown: false }}
             >
               <Stack.Screen name="LoginPage" component={LoginPage} />
               <Stack.Screen name="SignUp" component={SignUpPage} />
-              <Stack.Screen
-                name="ResetpasswordPage"
-                component={ResetpasswordPage}
-              />
+              <Stack.Screen name="ResetpasswordPage" component={ResetpasswordPage} />
               <Stack.Screen name="pwd" component={PwdCompletePage} />
-
-              {/* 탭 */}
               <Stack.Screen name="Main" component={MainTabs} />
+              
+             
 
-              {/* ⭐ 모달 화면 */}
               <Stack.Screen
                 name="AddSchedule"
                 component={AddScheduleScreen}
