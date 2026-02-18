@@ -1,155 +1,206 @@
 import { StyleSheet, Dimensions, Platform } from 'react-native';
-// ✅ 기존 가이드대로 React 18 환경 및 상위 폴더 스타일 참조
 import { styles as commonStyles } from '../homePage/HomePageDetail.styles';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-// 가로 비율(Width Percentage) 및 세로 비율(Height Percentage) 계산 함수
 const wp = (size: number) => (size / 393) * SCREEN_WIDTH;
 const hp = (size: number) => (size / 852) * SCREEN_HEIGHT;
 
 export default StyleSheet.create({
-  ...commonStyles, // 공통 스타일 상속
+  /* ===================================================
+     공통 스타일 상속
+  =================================================== */
+  ...commonStyles,
 
-  titleRow: { 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    alignItems: 'center', 
-    marginBottom: hp(30) 
+  /* ===================================================
+     ⭐ MedicinePage 전용 헤더 (홈과 완전 분리)
+     여기 값만 조절하면 약관리 페이지만 움직임
+  =================================================== */
+
+  header: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+
+    paddingTop: hp(4), // 🔥 헤더 위아래 위치 조절
+    paddingBottom: hp(6),
   },
 
-  pageTitle: { 
-    fontSize: wp(30), 
-    fontWeight: '500', 
-    color: '#000' 
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: wp(2),
   },
 
-  calendarIcon: { 
-    width: wp(24), 
-    height: wp(24), 
-    resizeMode: 'contain' 
-  },
-
-  /* --- 캘린더 섹션 --- */
-  calendarSection: { 
-    flexDirection: 'row', 
-    alignItems: 'flex-start', 
-    justifyContent: 'space-between', 
-    marginBottom: hp(30) 
-  },
-
-  calendarContainer: { 
-    flexDirection: 'row', 
-    flex: 1, 
-    justifyContent: 'space-between', 
-    paddingHorizontal: wp(5) 
-  },
-
-  dayColumn: { 
-    alignItems: 'center', 
-    width: wp(40) 
-  },
-
-  dayLabel: { 
-    fontSize: wp(14), 
-    marginBottom: hp(12),
-    color: '#767676' 
-  },
-
-  dateCircle: { 
-    width: wp(36), 
-    height: wp(36), 
-    justifyContent: 'center', 
-    alignItems: 'center' 
-  },
-
-  activeCircle: { 
-    backgroundColor: '#97C1FF', 
-    borderRadius: wp(18) 
-  },
-
-  dateText: { 
-    fontSize: wp(14), 
-    fontWeight: '500' 
-  },
-
-  arrowIcon: { 
-    width: wp(24), 
-    height: wp(24), 
+  menuIcon: {
+    width: wp(25),
+    height: wp(25),
     resizeMode: 'contain',
-    marginTop: hp(42), 
+
+    marginLeft: wp(-5),
+    transform: [{ translateY: hp(-1) }],
   },
 
-  /* --- 추가 버튼 및 리스트 --- */
-  addButton: { 
-    width: '100%', 
-    height: hp(42), 
-    backgroundColor: '#0068FF', 
-    borderRadius: wp(93), 
-    justifyContent: 'center', 
-    alignItems: 'center', 
-    marginBottom: hp(40) 
+  /* ===================================================
+     제목 영역
+  =================================================== */
+
+  titleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: hp(10),
+    marginBottom: hp(20),
   },
 
-  addButtonText: { 
-    color: '#FFF', 
-    fontSize: wp(13), 
-    fontWeight: '600' 
+  pageTitle: {
+    fontSize: wp(28),
+    fontWeight: '500',
+    color: '#000',
+    transform: [{ translateY: hp(1) }], // "약 관리" 글씨 위치 조절
   },
 
-  sectionTitleRow: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    marginBottom: hp(16) 
+  calendarIcon: {
+    width: wp(24),
+    height: wp(24),
+    resizeMode: 'contain',
   },
 
-  sectionTitle: { 
-    fontSize: wp(18), 
-    fontWeight: '700', 
-    color: '#1E1E1E', 
-    marginRight: wp(8) 
+  /* ===================================================
+     주간 캘린더
+  =================================================== */
+
+  calendarSection: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    marginBottom: hp(30),
   },
 
-  pillCount: { 
-    fontSize: wp(14), 
-    color: '#409CFF', 
-    fontWeight: '600' 
+  calendarContainer: {
+    flexDirection: 'row',
+    flex: 1,
+    justifyContent: 'space-between',
+    paddingHorizontal: wp(5),
   },
 
-  pillCard: { 
-    width: '100%', 
-    height: hp(88), 
-    backgroundColor: '#F8F9FA', 
-    borderRadius: wp(16), 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    justifyContent: 'space-between', 
-    paddingHorizontal: wp(20), 
-    marginBottom: hp(12) 
+  dayColumn: {
+    alignItems: 'center',
+    width: wp(40),
   },
 
-  pillInfo: { 
-    gap: hp(4) 
+  dayLabel: {
+    fontSize: wp(14),
+    marginBottom: hp(12),
+    color: '#767676',
   },
 
-  pillTime: { 
-    fontSize: wp(12), 
-    color: '#767676' 
+  dateCircle: {
+    width: wp(36),
+    height: wp(36),
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
-  pillName: { 
-    fontSize: wp(16), 
-    fontWeight: '600', 
-    color: '#1E1E1E' 
+  activeCircle: {
+    backgroundColor: '#97C1FF',
+    borderRadius: wp(18),
   },
 
-  checkIcon: { 
-    width: wp(32), 
-    height: wp(32), 
-    resizeMode: 'contain' 
+  dateText: {
+    fontSize: wp(14),
+    fontWeight: '500',
   },
 
-  /* --- 캘린더 팝업 (Figma 전용 스타일 추가) --- */
+  arrowIcon: {
+    width: wp(24),
+    height: wp(24),
+    resizeMode: 'contain',
+    marginTop: hp(32), // ← 화살표 높이 조절
+  },
+
+  /* ===================================================
+     복용 예정 카드
+  =================================================== */
+
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: hp(16),
+  },
+
+  sectionTitle: {
+    fontSize: wp(18),
+    fontWeight: '700',
+    color: '#1E1E1E',
+    marginRight: wp(8),
+  },
+
+  pillCount: {
+    fontSize: wp(14),
+    color: '#409CFF',
+    fontWeight: '600',
+  },
+
+  pillCard: {
+    width: '100%',
+    height: hp(88),
+    backgroundColor: '#F8F9FA',
+    borderRadius: wp(16),
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: wp(20),
+    marginBottom: hp(12),
+  },
+
+  pillInfo: {
+    gap: hp(4),
+  },
+
+  pillTime: {
+    fontSize: wp(12),
+    color: '#767676',
+  },
+
+  pillName: {
+    fontSize: wp(16),
+    fontWeight: '600',
+    color: '#1E1E1E',
+  },
+
+  checkIcon: {
+    width: wp(32),
+    height: wp(32),
+    resizeMode: 'contain',
+  },
+
+  /* ===================================================
+     추가 버튼 (스크롤 하단 여백 포함)
+  =================================================== */
+
+  addButton: {
+    width: '100%',
+    height: hp(42),
+    backgroundColor: '#0068FF',
+    borderRadius: wp(93),
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: hp(10),
+    marginBottom: hp(120), // 🔥 하단 잘림 방지 여백
+  },
+
+  addButtonText: {
+    color: '#FFF',
+    fontSize: wp(13),
+    fontWeight: '600',
+  },
+
+  /* ===================================================
+     캘린더 팝업
+  =================================================== */
+
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.4)',
@@ -163,13 +214,12 @@ export default StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: wp(8),
     padding: wp(24),
-    // Dropdown Shadow (피그마 2px 16px 19px rgba(0,0,0,0.09))
     ...Platform.select({
       ios: {
         shadowColor: '#000',
-        shadowOffset: { width: 2, height: 16 },
+        shadowOffset: { width: wp(2), height: hp(16) },
         shadowOpacity: 0.09,
-        shadowRadius: 19,
+        shadowRadius: wp(19),
       },
       android: {
         elevation: 10,
@@ -211,7 +261,7 @@ export default StyleSheet.create({
     fontSize: wp(10),
     fontWeight: '600',
     color: '#B5BEC6',
-    letterSpacing: 1.5,
+    letterSpacing: wp(1.5),
   },
 
   dateGrid: {
@@ -240,5 +290,180 @@ export default StyleSheet.create({
 
   popupDateTextActive: {
     color: '#FFFFFF',
+  },
+
+  /* ===== 새 카드 UI ===== */
+
+  scheduleCard: {
+    width: '100%',
+    borderRadius: wp(14),
+    borderWidth: 1,
+    borderColor: '#D9D9D9',
+    backgroundColor: '#F8F9FA',
+    marginBottom: hp(16),
+    overflow: 'hidden',
+
+    position: 'relative', // ⭐ 중요
+  },
+
+  scheduleHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: wp(14),
+    paddingVertical: hp(10),
+    backgroundColor: '#F1F3F5',
+    borderBottomWidth: 1,
+    borderBottomColor: '#D9D9D9',
+  },
+
+  scheduleTime: {
+    fontSize: wp(22),
+    fontWeight: '700',
+    color: '#1E1E1E',
+  },
+
+  scheduleAmPm: {
+    fontSize: wp(12),
+    marginLeft: wp(6),
+    color: '#3b3b3b',
+    marginTop: wp(6),
+  },
+
+  scheduleState: {
+    fontSize: wp(12),
+    marginLeft: wp(6),
+    color: '#B0B0B0',
+  },
+
+  takeBtn: {
+    fontSize: wp(13),
+    color: '#0068FF',
+    fontWeight: '600',
+  },
+
+  scheduleBody: {
+    padding: wp(14),
+  },
+
+  medicineTitleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: hp(8),
+  },
+
+  medicineTitle: {
+    fontSize: wp(16),
+    fontWeight: '700',
+    color: '#1E1E1E',
+  },
+
+  menuIconSmall: {
+    width: wp(20),
+    height: wp(20),
+    tintColor: '#767676',
+  },
+
+  scheduleText: {
+    fontSize: wp(12),
+    color: '#767676',
+    marginBottom: hp(4),
+  },
+
+  statusOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  statusModal: {
+    width: wp(300),
+    backgroundColor: '#fff',
+    borderRadius: wp(16),
+    padding: wp(20),
+    alignItems: 'center',
+  },
+
+  statusTitle: {
+    fontSize: wp(16),
+    fontWeight: '600',
+    marginBottom: hp(20),
+  },
+
+  statusRow: {
+    flexDirection: 'row',
+    gap: wp(10),
+    marginBottom: hp(20),
+  },
+
+  statusBtn: {
+    paddingHorizontal: wp(12),
+    paddingVertical: hp(8),
+    borderRadius: wp(20),
+    backgroundColor: '#eee',
+  },
+
+  statusBtnActiveBlue: { backgroundColor: '#c6f0c5' },
+  statusBtnActiveGray: { backgroundColor: '#b9ecf4' },
+  statusBtnActivePink: { backgroundColor: '#FFD6E5' },
+
+  statusText: {
+    fontSize: wp(12),
+    fontWeight: '600',
+  },
+
+  confirmBtn: {
+    width: '100%',
+    backgroundColor: '#1E88E5',
+    paddingVertical: hp(12),
+    borderRadius: wp(10),
+    alignItems: 'center',
+    marginBottom: hp(10),
+  },
+
+  cancelText: {
+    color: '#888',
+    fontSize: wp(14),
+    marginTop: wp(7),
+  },
+
+  cardMenu: {
+    position: 'absolute',
+    right: wp(12),
+    top: hp(38),
+
+    width: wp(90),
+    backgroundColor: '#F5F5F5',
+    borderRadius: wp(10),
+    paddingVertical: hp(6),
+
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: wp(8),
+    shadowOffset: { width: 0, height: hp(2) },
+    elevation: hp(10),
+  },
+
+  cardMenuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: hp(10),
+    paddingHorizontal: wp(14),
+  },
+
+  cardMenuIcon: {
+    width: wp(18),
+    height: wp(18),
+    marginRight: wp(10),
+    resizeMode: 'contain',
+    tintColor: '#888',
+  },
+
+  cardMenuText: {
+    fontSize: wp(14),
+    color: '#333',
+    fontWeight: '500',
   },
 });

@@ -14,11 +14,19 @@ interface Props {
   visible: boolean;
   onClose: () => void;
   friendList: string[];
-  // 🔹 삭제 기능을 위해 부모로부터 함수를 하나 더 받습니다.
+  // 🔹 삭제 기능
   onDelete: (email: string) => void; 
+  // 🔹 추가: 방명록 작성 아이콘(write_off) 클릭 시 실행할 함수 [이미지 흐름 반영]
+  onWriteGuestBook: (email: string) => void;
 }
 
-export default function FrendPopup({ visible, onClose, friendList, onDelete }: Props) {
+export default function FrendPopup({ 
+  visible, 
+  onClose, 
+  friendList, 
+  onDelete, 
+  onWriteGuestBook 
+}: Props) {
   return (
     <Modal
       transparent
@@ -59,15 +67,20 @@ export default function FrendPopup({ visible, onClose, friendList, onDelete }: P
                   </View>
 
                   <View style={styles.actionIcons}>
-                    <Image 
-                      source={require('../../assets/images/share/write_off.png')} 
-                      style={{ width: 18, height: 18, marginRight: 8 }} 
-                    />
+                    {/* 🔹 방명록 작성 아이콘: 클릭 시 방명록 작성 팝업 연결 */}
+                    <TouchableOpacity onPress={() => onWriteGuestBook(email)}>
+                      <Image 
+                        source={require('../../assets/images/share/write_off.png')} 
+                        style={{ width: 18, height: 18, marginRight: 8 }} 
+                      />
+                    </TouchableOpacity>
+
                     <Image 
                       source={require('../../assets/images/share/calender.png')} 
                       style={{ width: 18, height: 20, marginRight: 8 }} 
                     />
-                    {/* 🔥 삭제 버튼 클릭 시 onDelete 실행 */}
+                    
+                    {/* 삭제 버튼 */}
                     <TouchableOpacity onPress={() => onDelete(email)}>
                       <Text style={styles.deleteText}>삭제</Text>
                     </TouchableOpacity>
