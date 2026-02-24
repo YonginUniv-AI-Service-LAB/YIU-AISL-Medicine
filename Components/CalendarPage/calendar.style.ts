@@ -83,7 +83,6 @@ const styles = StyleSheet.create({
 
   cell: {
     flex: 1,
-    aspectRatio: 1,
     borderWidth: 0.3,
     borderColor: '#E2E5E9',
     backgroundColor: '#FFFFFF',
