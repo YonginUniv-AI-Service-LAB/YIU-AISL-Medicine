@@ -21,6 +21,7 @@ interface MedicineContextType {
   addMedicine: (item: MedicineSchedule) => void;
   updateStatus: (id: string, status: MedicineStatus) => void;
   removeMedicine: (id: string) => void;
+  updateMedicine: (id: string, item: MedicineSchedule) => void;
 }
 
 const MedicineContext = createContext<MedicineContextType | null>(null);
@@ -44,9 +45,21 @@ export const MedicineProvider: React.FC<{ children: React.ReactNode }> = ({
     setMedicines((prev) => prev.filter((m) => m.id !== id));
   };
 
+  const updateMedicine = (id: string, updated: MedicineSchedule) => {
+    setMedicines((prev) =>
+      prev.map((m) => (m.id === id ? { ...m, ...updated } : m)),
+    );
+  };
+
   return (
     <MedicineContext.Provider
-      value={{ medicines, addMedicine, updateStatus, removeMedicine }}
+      value={{
+        medicines,
+        addMedicine,
+        updateStatus,
+        removeMedicine,
+        updateMedicine,
+      }}
     >
       {children}
     </MedicineContext.Provider>

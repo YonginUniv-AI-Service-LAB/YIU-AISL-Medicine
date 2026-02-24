@@ -34,6 +34,10 @@ const MedicinePage: React.FC = () => {
   const [selectedMedicineId, setSelectedMedicineId] = useState<string | null>(
     null,
   );
+  const [confirmModalVisible, setConfirmModalVisible] = useState(false);
+  const [confirmType, setConfirmType] = useState<'edit' | 'delete' | null>(
+    null,
+  );
   const [selectedStatus, setSelectedStatus] = useState<
     'done' | 'before' | 'missed'
   >('before');
@@ -226,10 +230,10 @@ const MedicinePage: React.FC = () => {
                         <TouchableOpacity
                           style={styles.cardMenuItem}
                           onPress={() => {
+                            setSelectedMedicineId(item.id);
+                            setConfirmType('edit');
+                            setConfirmModalVisible(true);
                             setMenuVisibleId(null);
-                            navigation.navigate('AddSchedule', {
-                              editData: item,
-                            });
                           }}
                         >
                           <Image
@@ -240,7 +244,13 @@ const MedicinePage: React.FC = () => {
                         </TouchableOpacity>
 
                         <TouchableOpacity
-                          onPress={() => handleDeleteMedicine(item.id)}
+                          style={styles.cardMenuItem}
+                          onPress={() => {
+                            setSelectedMedicineId(item.id);
+                            setConfirmType('delete');
+                            setConfirmModalVisible(true);
+                            setMenuVisibleId(null);
+                          }}
                         >
                           <Image
                             source={require('../../assets/images/Medicine/delete_off.png')}
@@ -322,6 +332,22 @@ const MedicinePage: React.FC = () => {
           <Modal visible={statusModalVisible} transparent animationType="fade">
             <View style={styles.statusOverlay}>
               <View style={styles.statusModal}>
+                {/* 🔥 상단 아이콘 + 닫기 버튼 */}
+                <View style={styles.statusHeader}>
+                  <Image
+                    source={require('../../assets/images/calendar/medicine_on.png')}
+                    style={styles.statusIcon}
+                  />
+
+                  <TouchableOpacity
+                    onPress={() => setStatusModalVisible(false)}
+                  >
+                    <Image
+                      source={require('../../assets/images/x-close.png')}
+                      style={styles.statusClose}
+                    />
+                  </TouchableOpacity>
+                </View>
                 <Text style={styles.statusTitle}>복용유무를 선택하세요</Text>
 
                 <View style={styles.statusRow}>
@@ -371,6 +397,71 @@ const MedicinePage: React.FC = () => {
 
                 <TouchableOpacity onPress={() => setStatusModalVisible(false)}>
                   <Text style={styles.cancelText}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
+          {/* ===== 수정/삭제 확인 모달 ===== */}
+          <Modal visible={confirmModalVisible} transparent animationType="fade">
+            <View style={styles.confirmOverlay}>
+              <View style={styles.confirmBox}>
+                {/* 🔥 상단 아이콘 + 닫기 */}
+                <View style={styles.confirmHeader}>
+                  <Image
+                    source={
+                      confirmType === 'edit'
+                        ? require('../../assets/images/Medicine/edit_on.png')
+                        : require('../../assets/images/Medicine/delete_on.png')
+                    }
+                    style={styles.confirmIcon}
+                  />
+
+                  <TouchableOpacity
+                    onPress={() => setConfirmModalVisible(false)}
+                  >
+                    <Image
+                      source={require('../../assets/images/x-close.png')}
+                      style={styles.confirmClose}
+                    />
+                  </TouchableOpacity>
+                </View>
+
+                <Text style={styles.confirmTitle}>
+                  {confirmType === 'edit'
+                    ? '약 일정을 수정하시겠습니까?'
+                    : '약 일정을 삭제하시겠습니까?'}
+                </Text>
+
+                {/* 메인 버튼 */}
+                <TouchableOpacity
+                  style={[
+                    styles.confirmMainBtn,
+                    confirmType === 'delete' && { backgroundColor: '#E53935' },
+                  ]}
+                  onPress={() => {
+                    if (confirmType === 'edit') {
+                      navigation.navigate('AddSchedule', {
+                        editData: medicines.find(
+                          (m) => m.id === selectedMedicineId,
+                        ),
+                      });
+                    } else if (confirmType === 'delete' && selectedMedicineId) {
+                      handleDeleteMedicine(selectedMedicineId);
+                    }
+                    setConfirmModalVisible(false);
+                  }}
+                >
+                  <Text style={styles.confirmMainText}>
+                    {confirmType === 'edit' ? '수정하기' : '삭제하기'}
+                  </Text>
+                </TouchableOpacity>
+
+                {/* 취소 */}
+                <TouchableOpacity
+                  style={styles.confirmCancelBtn}
+                  onPress={() => setConfirmModalVisible(false)}
+                >
+                  <Text style={styles.confirmCancelText}>취소하기</Text>
                 </TouchableOpacity>
               </View>
             </View>

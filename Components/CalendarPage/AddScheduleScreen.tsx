@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   Pressable,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useRoute } from '@react-navigation/native';
 
 import styles from './AddSchedule.style';
 import { DAYS, HOURS } from './calendarData';
@@ -81,28 +82,72 @@ const OptionBox = ({ title, children }: any) => (
 
 const AddScheduleScreen: React.FC = () => {
   const navigation = useNavigation();
+  const route = useRoute<any>();
+  const editData = route.params?.editData;
+  const isEdit = !!editData;
 
-  /* ⭐⭐⭐ 여기로 이동 (핵심 수정) */
-  const { addSchedules } = useSchedule();
-  const { addMedicine } = useMedicine(); // ⭐ 추가
+  const { addSchedules, removeSchedulesByMedicineId } = useSchedule();
 
   /* 미리보기용 */
-  const [medicineName, setMedicineName] = useState('');
-  const [memo, setMemo] = useState('');
+  const [medicineName, setMedicineName] = useState(editData?.name || '');
+  const [memo, setMemo] = useState(editData?.memo || '');
 
   const [selectedCells, setSelectedCells] = useState<string[]>([]);
+  useEffect(() => {
+    if (editData) {
+      const cells: string[] = [];
+
+      editData.days?.forEach((day: string) => {
+        const dayIndex = DAYS.findIndex((d) => d === day);
+
+        editData.times.forEach((time: string) => {
+          const hour = parseInt(time.split(':')[0], 10);
+          const hourIndex = getCalendarIndex(hour);
+
+          cells.push(`${dayIndex}-${hourIndex}`);
+        });
+      });
+
+      setSelectedCells(cells);
+    }
+  }, [editData]);
 
   const [modalVisible, setModalVisible] = useState(false);
-  const [doseCount, setDoseCount] = useState<number | null>(null);
-  const [doseHours, setDoseHours] = useState<number[]>([]);
-  const [doseDays, setDoseDays] = useState<string[]>([]);
-  const [dosePeriod, setDosePeriod] = useState<number | null>(null);
+  const [doseCount, setDoseCount] = useState<number | null>(
+    editData?.count || null,
+  );
+  const [doseHours, setDoseHours] = useState<number[]>(
+    editData?.times
+      ? editData.times.map((t: string) => parseInt(t.split(':')[0], 10))
+      : [],
+  );
+  const [doseDays, setDoseDays] = useState<string[]>(
+    editData?.days
+      ? editData.days.map((d: string) => {
+          const map: any = {
+            월: '월요일',
+            화: '화요일',
+            수: '수요일',
+            목: '목요일',
+            금: '금요일',
+            토: '토요일',
+            일: '일요일',
+          };
+          return map[d];
+        })
+      : [],
+  );
+  const [dosePeriod, setDosePeriod] = useState<number | null>(
+    editData?.period || null,
+  );
   const [remainCount, setRemainCount] = useState<number | null>(null);
 
   const [doseCountInput, setDoseCountInput] = useState('');
   const [dosePeriodInput, setDosePeriodInput] = useState('');
   const [remainInput, setRemainInput] = useState('');
-  const [category, setCategory] = useState('');
+  const [category, setCategory] = useState(editData?.category || '');
+
+  const { addMedicine, updateMedicine } = useMedicine();
 
   const toggleDay = (day: string) => {
     if (day === '전체 선택') {
@@ -143,7 +188,7 @@ const AddScheduleScreen: React.FC = () => {
 
   /* 변경하기 → 미리보기 */
   const saveSchedule = () => {
-    const medicineId = Date.now().toString();
+    const medicineId = isEdit ? editData.id : Date.now().toString();
 
     const today =
       new Date().getFullYear() +
@@ -160,7 +205,7 @@ const AddScheduleScreen: React.FC = () => {
     const count = doseCount ?? Number(doseCountInput) ?? times.length;
 
     // ---------------- 카드 저장 ----------------
-    addMedicine({
+    const data = {
       id: medicineId,
       name: medicineName || '약 이름 없음',
       category: category || '미분류',
@@ -171,21 +216,42 @@ const AddScheduleScreen: React.FC = () => {
       remain: remainCount ?? undefined,
       memo: memo,
       date: today,
-      status: 'before',
-    });
+      status: 'before' as const,
+    };
 
-    // ---------------- 캘린더 저장 ----------------
-    if (selectedCells.length > 0) {
-      const converted = selectedCells.map((cell) => {
-        const [dayIndex, hourIndex] = cell.split('-').map(Number);
-        return {
-          medicineId,
-          dayIndex,
-          hourIndex,
-        };
-      });
+    if (isEdit) {
+      updateMedicine(medicineId, data);
 
-      addSchedules(converted);
+      // 🔥 기존 스케줄 삭제 후 다시 추가
+      removeSchedulesByMedicineId(medicineId);
+
+      if (selectedCells.length > 0) {
+        const converted = selectedCells.map((cell) => {
+          const [dayIndex, hourIndex] = cell.split('-').map(Number);
+          return {
+            medicineId,
+            dayIndex,
+            hourIndex,
+          };
+        });
+
+        addSchedules(converted);
+      }
+    } else {
+      addMedicine(data);
+
+      if (selectedCells.length > 0) {
+        const converted = selectedCells.map((cell) => {
+          const [dayIndex, hourIndex] = cell.split('-').map(Number);
+          return {
+            medicineId,
+            dayIndex,
+            hourIndex,
+          };
+        });
+
+        addSchedules(converted);
+      }
     }
 
     navigation.goBack();

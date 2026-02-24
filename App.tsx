@@ -12,6 +12,7 @@ import RootNavigator from './Components/Navigation';
 import { ScheduleProvider } from './contexts/ScheduleContext';
 import { MedicineProvider } from './contexts/MedicineContext';
 import { View } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
 
 // 자동 숨김 방지 (앱 시작 시 1회)
 SplashScreen.preventAutoHideAsync();
@@ -34,12 +35,12 @@ export default function App() {
   if (!fontsLoaded) return null;
 
   return (
-    <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+    <MedicineProvider>
       <ScheduleProvider>
-        <MedicineProvider>
+        <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
           <RootNavigator />
-        </MedicineProvider>
+        </View>
       </ScheduleProvider>
-    </View>
+    </MedicineProvider>
   );
 }

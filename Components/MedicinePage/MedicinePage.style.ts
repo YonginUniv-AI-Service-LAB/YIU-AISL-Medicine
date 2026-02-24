@@ -414,6 +414,26 @@ export default StyleSheet.create({
     fontWeight: '600',
   },
 
+  statusHeader: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+
+  statusIcon: {
+    width: 32,
+    height: 32,
+    resizeMode: 'contain',
+  },
+
+  statusClose: {
+    width: 20,
+    height: 20,
+    tintColor: '#999',
+  },
+
   confirmBtn: {
     width: '100%',
     backgroundColor: '#1E88E5',
@@ -465,5 +485,75 @@ export default StyleSheet.create({
     fontSize: wp(14),
     color: '#333',
     fontWeight: '500',
+  },
+
+  confirmOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  confirmBox: {
+    width: wp(300),
+    backgroundColor: '#fff',
+    borderRadius: wp(20),
+    padding: wp(20),
+    alignItems: 'center',
+  },
+
+  confirmTitle: {
+    fontSize: wp(16),
+    fontWeight: '600',
+    marginBottom: hp(40),
+    textAlign: 'center',
+  },
+
+  confirmMainBtn: {
+    width: '100%',
+    backgroundColor: '#FF3B30',
+    paddingVertical: hp(12),
+    borderRadius: wp(10),
+    alignItems: 'center',
+    marginBottom: hp(10),
+  },
+
+  confirmMainText: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+
+  confirmCancelBtn: {
+    width: '100%',
+    paddingVertical: hp(12),
+    borderRadius: wp(10),
+    borderWidth: 1,
+    borderColor: '#ddd',
+    alignItems: 'center',
+  },
+
+  confirmCancelText: {
+    color: '#555',
+    fontWeight: '500',
+  },
+
+  confirmHeader: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+
+  confirmIcon: {
+    width: 36,
+    height: 36,
+    resizeMode: 'contain',
+  },
+
+  confirmClose: {
+    width: 20,
+    height: 20,
+    tintColor: '#999',
   },
 });

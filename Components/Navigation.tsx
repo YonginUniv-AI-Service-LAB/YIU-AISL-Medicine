@@ -54,10 +54,15 @@ function MainTabs() {
   const isIOS = Platform.OS === 'ios';
 
   let baseHeight = isIOS
-    ? sizeCategory === 'smallPhone' ? 40 : sizeCategory === 'tablet' ? 60 : 50
+    ? sizeCategory === 'smallPhone'
+      ? 40
+      : sizeCategory === 'tablet'
+        ? 60
+        : 50
     : 50;
 
-  const extra = sizeCategory === 'tablet' ? 10 : sizeCategory === 'smallPhone' ? -5 : 0;
+  const extra =
+    sizeCategory === 'tablet' ? 10 : sizeCategory === 'smallPhone' ? -5 : 0;
   const TAB_BAR_HEIGHT = baseHeight + insets.bottom + extra;
 
   return (
@@ -79,11 +84,20 @@ function MainTabs() {
         tabBarIcon: ({ focused }) => {
           let src;
           switch (route.name) {
-            case 'Home': src = focused ? ICONS.afterHome : ICONS.beforeHome; break;
-            case 'Medicine': src = focused ? ICONS.afterMedicine : ICONS.beforeMedicine; break;
-            case 'Calendar': src = focused ? ICONS.afterCalendar : ICONS.beforeCalendar; break;
-            case 'Share': src = focused ? ICONS.afterShare : ICONS.beforeShare; break;
-            default: src = ICONS.beforeHome;
+            case 'Home':
+              src = focused ? ICONS.afterHome : ICONS.beforeHome;
+              break;
+            case 'Medicine':
+              src = focused ? ICONS.afterMedicine : ICONS.beforeMedicine;
+              break;
+            case 'Calendar':
+              src = focused ? ICONS.afterCalendar : ICONS.beforeCalendar;
+              break;
+            case 'Share':
+              src = focused ? ICONS.afterShare : ICONS.beforeShare;
+              break;
+            default:
+              src = ICONS.beforeHome;
           }
           return (
             <Image
@@ -108,39 +122,38 @@ export default function RootNavigator() {
 
   return (
     <SafeAreaProvider>
-      <MedicineProvider>
-        <NavigationContainer>
-          <View style={{ flex: 1 }}>
-            <StatusBar
-              barStyle={isIOS ? 'dark-content' : 'default'}
-              backgroundColor="transparent"
-              translucent
+      <NavigationContainer>
+        <View style={{ flex: 1 }}>
+          <StatusBar
+            barStyle={isIOS ? 'dark-content' : 'default'}
+            backgroundColor="transparent"
+            translucent
+          />
+
+          <Stack.Navigator
+            initialRouteName="Main"
+            screenOptions={{ headerShown: false }}
+          >
+            <Stack.Screen name="LoginPage" component={LoginPage} />
+            <Stack.Screen name="SignUp" component={SignUpPage} />
+            <Stack.Screen
+              name="ResetpasswordPage"
+              component={ResetpasswordPage}
             />
+            <Stack.Screen name="pwd" component={PwdCompletePage} />
+            <Stack.Screen name="Main" component={MainTabs} />
 
-            <Stack.Navigator
-              initialRouteName="Main"
-              screenOptions={{ headerShown: false }}
-            >
-              <Stack.Screen name="LoginPage" component={LoginPage} />
-              <Stack.Screen name="SignUp" component={SignUpPage} />
-              <Stack.Screen name="ResetpasswordPage" component={ResetpasswordPage} />
-              <Stack.Screen name="pwd" component={PwdCompletePage} />
-              <Stack.Screen name="Main" component={MainTabs} />
-              
-             
-
-              <Stack.Screen
-                name="AddSchedule"
-                component={AddScheduleScreen}
-                options={{
-                  presentation: 'modal',
-                  animation: 'slide_from_bottom',
-                }}
-              />
-            </Stack.Navigator>
-          </View>
-        </NavigationContainer>
-      </MedicineProvider>
+            <Stack.Screen
+              name="AddSchedule"
+              component={AddScheduleScreen}
+              options={{
+                presentation: 'modal',
+                animation: 'slide_from_bottom',
+              }}
+            />
+          </Stack.Navigator>
+        </View>
+      </NavigationContainer>
     </SafeAreaProvider>
   );
 }
