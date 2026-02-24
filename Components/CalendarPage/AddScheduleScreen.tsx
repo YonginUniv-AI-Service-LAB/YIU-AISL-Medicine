@@ -40,29 +40,19 @@ const getCalendarIndex = (hour24: number) => {
 };
 
 const Radio = ({ active }: { active: boolean }) => (
-  <View
+  <Image
+    source={
+      active
+        ? require('../../assets/images/calendar/off.png')
+        : require('../../assets/images/calendar/on.png')
+    }
     style={{
-      width: 14,
-      height: 14,
-      borderRadius: 7,
-      borderWidth: 2,
-      borderColor: active ? '#2F80FF' : '#CFCFCF',
-      alignItems: 'center',
-      justifyContent: 'center',
+      width: 10,
+      height: 10,
       marginRight: 6,
+      resizeMode: 'contain',
     }}
-  >
-    {active && (
-      <View
-        style={{
-          width: 6,
-          height: 6,
-          borderRadius: 3,
-          backgroundColor: '#2F80FF',
-        }}
-      />
-    )}
-  </View>
+  />
 );
 
 const OptionBox = ({ title, children }: any) => (
@@ -76,7 +66,8 @@ const OptionBox = ({ title, children }: any) => (
     }}
   >
     <Text style={{ fontWeight: '600', marginBottom: 10 }}>{title}</Text>
-    {typeof children === 'string' ? <Text>{children}</Text> : children}
+
+    {children}
   </View>
 );
 
@@ -199,12 +190,14 @@ const AddScheduleScreen: React.FC = () => {
 
     // 시간 문자열
     const times = doseHours.map((h) => `${String(h).padStart(2, '0')}:00`);
-    const days = doseDays.map((d) => d[0]);
 
-    // 복용횟수 계산
-    const count = doseCount ?? Number(doseCountInput) ?? times.length;
+    const days = doseDays?.map((d) => d[0]) ?? [];
 
-    // ---------------- 카드 저장 ----------------
+    const count =
+      doseCount ??
+      (doseCountInput ? Number(doseCountInput) : undefined) ??
+      times.length;
+
     const data = {
       id: medicineId,
       name: medicineName || '약 이름 없음',
@@ -214,7 +207,7 @@ const AddScheduleScreen: React.FC = () => {
       days,
       period: dosePeriod ?? undefined,
       remain: remainCount ?? undefined,
-      memo: memo,
+      memo: memo || '',
       date: today,
       status: 'before' as const,
     };
@@ -225,7 +218,7 @@ const AddScheduleScreen: React.FC = () => {
       // 🔥 기존 스케줄 삭제 후 다시 추가
       removeSchedulesByMedicineId(medicineId);
 
-      if (selectedCells.length > 0) {
+      if (selectedCells?.length > 0) {
         const converted = selectedCells.map((cell) => {
           const [dayIndex, hourIndex] = cell.split('-').map(Number);
           return {
@@ -297,14 +290,20 @@ const AddScheduleScreen: React.FC = () => {
 
               {DAYS.map((day, dayIndex) => {
                 const key = `${dayIndex}-${hourIndex}`;
+                const isSelected = selectedCells.includes(key);
+
                 return (
                   <View
                     key={key}
-                    style={[
-                      styles.cell,
-                      selectedCells.includes(key) && styles.activeCell,
-                    ]}
-                  />
+                    style={[styles.cell, isSelected && styles.activeCell]}
+                  >
+                    {isSelected && (
+                      <Image
+                        source={require('../../assets/images/calendar/medicine_on.png')}
+                        style={styles.cellIcon}
+                      />
+                    )}
+                  </View>
                 );
               })}
             </View>
@@ -352,7 +351,7 @@ const AddScheduleScreen: React.FC = () => {
       <Modal visible={modalVisible} transparent animationType="slide">
         <Pressable
           style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.35)' }}
-          onPress={Keyboard.dismiss}
+          onPress={() => Keyboard.dismiss()}
         >
           <Pressable
             style={{

@@ -39,9 +39,8 @@ export default StyleSheet.create({
     resizeMode: 'contain',
 
     marginLeft: wp(-5),
-    transform: [{ translateY: hp(-1) }],
+    marginTop: hp(-1),
   },
-
   /* ===================================================
      제목 영역
   =================================================== */
@@ -423,15 +422,13 @@ export default StyleSheet.create({
   },
 
   statusIcon: {
-    width: 32,
-    height: 32,
-    resizeMode: 'contain',
+    width: wp(32),
+    height: wp(32),
   },
 
   statusClose: {
-    width: 20,
-    height: 20,
-    tintColor: '#999',
+    width: wp(20),
+    height: wp(20),
   },
 
   confirmBtn: {
@@ -463,7 +460,7 @@ export default StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: wp(8),
     shadowOffset: { width: 0, height: hp(2) },
-    elevation: hp(10),
+    elevation: 10,
   },
 
   cardMenuItem: {
@@ -546,14 +543,12 @@ export default StyleSheet.create({
   },
 
   confirmIcon: {
-    width: 36,
-    height: 36,
-    resizeMode: 'contain',
+    width: wp(36),
+    height: wp(36),
   },
 
   confirmClose: {
-    width: 20,
-    height: 20,
-    tintColor: '#999',
+    width: wp(20),
+    height: wp(20),
   },
 });

@@ -83,9 +83,18 @@ const styles = StyleSheet.create({
 
   cell: {
     flex: 1,
+    aspectRatio: 1,
     borderWidth: 0.3,
     borderColor: '#E2E5E9',
     backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  cellIcon: {
+    width: wp(20),
+    height: wp(20),
+    resizeMode: 'contain',
   },
 
   /* 주말 컬럼 회색 */
@@ -95,6 +104,12 @@ const styles = StyleSheet.create({
 
   activeCell: {
     backgroundColor: '#19C2B3',
+  },
+
+  plusIcon: {
+    width: wp(16),
+    height: wp(16),
+    resizeMode: 'contain',
   },
 });
 

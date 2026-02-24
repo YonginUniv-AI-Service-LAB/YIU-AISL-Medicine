@@ -179,7 +179,7 @@ const MedicinePage: React.FC = () => {
         {/* 복용 예정 제목 */}
         <View style={styles.sectionTitleRow}>
           <Text style={styles.sectionTitle}>복용 예정</Text>
-          <Text style={styles.pillCount}>{todayMedicines.length}</Text>
+          <Text style={styles.pillCount}>{String(todayMedicines.length)}</Text>
         </View>
 
         {/* ===== 여기부터만 스크롤 ===== */}
@@ -197,8 +197,10 @@ const MedicinePage: React.FC = () => {
                     <View
                       style={{ flexDirection: 'row', alignItems: 'center' }}
                     >
-                      <Text style={styles.scheduleTime}>{firstTime}</Text>
-                      <Text style={styles.scheduleAmPm}>{ampm}</Text>
+                      <Text style={styles.scheduleTime}>
+                        {String(firstTime)}
+                      </Text>
+                      <Text style={styles.scheduleAmPm}>{String(ampm)}</Text>
                       <Text
                         style={[
                           styles.scheduleState,
@@ -266,7 +268,9 @@ const MedicinePage: React.FC = () => {
                     )}
 
                     <View style={styles.medicineTitleRow}>
-                      <Text style={styles.medicineTitle}>{item.name}</Text>
+                      <Text style={styles.medicineTitle}>
+                        {String(item.name)}
+                      </Text>
                       <TouchableOpacity
                         onPress={() =>
                           setMenuVisibleId(
@@ -291,12 +295,12 @@ const MedicinePage: React.FC = () => {
                     {/* ⭐ 복용횟수 */}
                     {item.count && (
                       <Text style={styles.scheduleText}>
-                        • 복용 횟수 : 하루 {item.count}번
+                        • 복용 횟수 : 하루 {String(item.count)}번
                       </Text>
                     )}
 
                     <Text style={styles.scheduleText}>
-                      • 복용 시간 : {item.times.join(', ')}
+                      • 복용 시간 : {String(item.times.join(', '))}
                     </Text>
 
                     {item.period && (

@@ -38,7 +38,10 @@ const CalendarScreen: React.FC = () => {
         />
 
         <TouchableOpacity style={styles.addBtn} onPress={handleAddPress}>
-          <Text style={styles.plus}>+</Text>
+          <Image
+            source={require('../../assets/images/calendar/plus.png')}
+            style={styles.plusIcon}
+          />
         </TouchableOpacity>
       </View>
 
@@ -60,7 +63,7 @@ const CalendarScreen: React.FC = () => {
         {HOURS.map((hour, hourIndex) => (
           <View key={`row-${hourIndex}`} style={styles.row}>
             {/* 시간 */}
-            <Text style={styles.timeText}>{hour}</Text>
+            <Text style={styles.timeText}>{String(hour)}</Text>
 
             {/* 칸 */}
             {DAYS.map((day: string, dayIndex: number) => {
@@ -75,9 +78,16 @@ const CalendarScreen: React.FC = () => {
                   style={[
                     styles.cell,
                     (dayIndex === 0 || dayIndex === 6) && styles.weekendCell,
-                    isScheduled && styles.activeCell, // ⭐ 색칠
+                    isScheduled && styles.activeCell,
                   ]}
-                />
+                >
+                  {isScheduled && (
+                    <Image
+                      source={require('../../assets/images/calendar/medicine_on.png')}
+                      style={styles.cellIcon}
+                    />
+                  )}
+                </View>
               );
             })}
           </View>

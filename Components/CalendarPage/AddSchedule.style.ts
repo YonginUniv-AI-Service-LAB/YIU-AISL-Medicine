@@ -93,8 +93,17 @@ export default StyleSheet.create({
 
   cell: {
     flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
     borderWidth: 0.5,
     borderColor: '#E5E7EB',
+    aspectRatio: 1, // ⭐ 핵심! 정사각형 유지
+  },
+
+  cellIcon: {
+    width: wp(20), // ⭐ 반응형 적용
+    height: wp(20),
+    resizeMode: 'contain',
   },
 
   activeCell: {
