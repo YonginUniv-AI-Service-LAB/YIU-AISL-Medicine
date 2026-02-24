@@ -303,15 +303,23 @@ const MedicinePage: React.FC = () => {
                       • 복용 시간 : {String(item.times.join(', '))}
                     </Text>
 
-                    {item.period && (
-                      <Text style={styles.scheduleText}>
-                        • 복용 기간 : {item.period}일
-                      </Text>
-                    )}
-
                     {item.days && item.days.length > 0 && (
                       <Text style={styles.scheduleText}>
                         • 복용 간격 : {item.days.join(', ')}
+                      </Text>
+                    )}
+
+                    <Text style={styles.scheduleText}>
+                      • 복용 기간 : {item.period ? `${item.period}일` : '-'}
+                    </Text>
+
+                    {item.remain !== undefined && item.remain !== null ? (
+                      <Text style={styles.scheduleText}>
+                        • 남은 복용 횟수: {item.remain}회
+                      </Text>
+                    ) : (
+                      <Text style={styles.scheduleText}>
+                        • 남은 복용 횟수: 없음
                       </Text>
                     )}
 

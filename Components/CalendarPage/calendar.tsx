@@ -6,10 +6,12 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import styles from './calendar.style';
 import { DAYS, HOURS } from './calendarData';
 import { useSchedule } from '../../contexts/ScheduleContext';
+import { useMedicine } from '../../contexts/MedicineContext';
 
 /** ⭐ 네비게이션 타입 */
 type RootStackParamList = {
   AddSchedule: undefined;
+  MedicineDetail: { medicine: any };
 };
 
 type NavigationProp = NativeStackNavigationProp<
@@ -22,6 +24,7 @@ const CalendarScreen: React.FC = () => {
 
   /** ⭐ 저장된 스케줄 가져오기 */
   const { schedules } = useSchedule();
+  const { medicines } = useMedicine();
 
   /** + 버튼 눌렀을 때 */
   const handleAddPress = () => {
@@ -82,10 +85,32 @@ const CalendarScreen: React.FC = () => {
                   ]}
                 >
                   {isScheduled && (
-                    <Image
-                      source={require('../../assets/images/calendar/medicine_on.png')}
-                      style={styles.cellIcon}
-                    />
+                    <TouchableOpacity
+                      onPress={() => {
+                        const scheduleItem = schedules.find(
+                          (s) =>
+                            s.dayIndex === dayIndex &&
+                            s.hourIndex === hourIndex,
+                        );
+
+                        const medicine = medicines.find(
+                          (m) =>
+                            String(m.id) === String(scheduleItem?.medicineId),
+                        );
+
+                        if (!medicine) {
+                          alert('약 데이터 없음');
+                          return;
+                        }
+
+                        navigation.navigate('MedicineDetail', { medicine });
+                      }}
+                    >
+                      <Image
+                        source={require('../../assets/images/calendar/medicine_on.png')}
+                        style={styles.cellIcon}
+                      />
+                    </TouchableOpacity>
                   )}
                 </View>
               );

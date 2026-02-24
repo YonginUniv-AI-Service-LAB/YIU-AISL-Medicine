@@ -133,10 +133,36 @@ const AddScheduleScreen: React.FC = () => {
   );
   const [remainCount, setRemainCount] = useState<number | null>(null);
 
-  const [doseCountInput, setDoseCountInput] = useState('');
+  const [doseCountInput, setDoseCountInput] = useState(
+    !doseCountNumbers.includes(editData?.count)
+      ? String(editData?.count ?? '')
+      : '',
+  );
   const [dosePeriodInput, setDosePeriodInput] = useState('');
   const [remainInput, setRemainInput] = useState('');
   const [category, setCategory] = useState(editData?.category || '');
+  useEffect(() => {
+    if (editData) {
+      // 복용 기간
+      if (editData.period) {
+        setDosePeriod(editData.period);
+        setDosePeriodInput(String(editData.period));
+      }
+
+      // 남은 횟수
+      if (editData.remain) {
+        setRemainCount(editData.remain);
+        setRemainInput(String(editData.remain));
+      }
+    }
+  }, [editData]);
+
+  const period =
+    dosePeriod ??
+    (dosePeriodInput !== '' ? Number(dosePeriodInput) : undefined);
+
+  const remain =
+    remainCount ?? (remainInput !== '' ? Number(remainInput) : undefined);
 
   const { addMedicine, updateMedicine } = useMedicine();
 
@@ -193,10 +219,19 @@ const AddScheduleScreen: React.FC = () => {
 
     const days = doseDays?.map((d) => d[0]) ?? [];
 
+    // ✅ 복용 횟수 (직접 입력 포함)
     const count =
       doseCount ??
       (doseCountInput ? Number(doseCountInput) : undefined) ??
       times.length;
+
+    // ✅ 복용 기간 (직접 입력 포함)
+    const period =
+      dosePeriod ?? (dosePeriodInput ? Number(dosePeriodInput) : undefined);
+
+    // ✅ 남은 복용 횟수 (직접 입력 포함)
+    const remain =
+      remainCount ?? (remainInput ? Number(remainInput) : undefined);
 
     const data = {
       id: medicineId,
@@ -205,8 +240,8 @@ const AddScheduleScreen: React.FC = () => {
       count,
       times,
       days,
-      period: dosePeriod ?? undefined,
-      remain: remainCount ?? undefined,
+      period,
+      remain,
       memo: memo || '',
       date: today,
       status: 'before' as const,
@@ -214,8 +249,6 @@ const AddScheduleScreen: React.FC = () => {
 
     if (isEdit) {
       updateMedicine(medicineId, data);
-
-      // 🔥 기존 스케줄 삭제 후 다시 추가
       removeSchedulesByMedicineId(medicineId);
 
       if (selectedCells?.length > 0) {
@@ -258,7 +291,11 @@ const AddScheduleScreen: React.FC = () => {
           onPress={() => navigation.goBack()}
           style={styles.left}
         >
-          <Text style={styles.close}>✕</Text>
+          <Image
+            source={require('../../assets/images/x-close.png')}
+            style={{ width: 20, height: 20 }}
+            resizeMode="contain"
+          />
         </TouchableOpacity>
 
         <View style={styles.center}>

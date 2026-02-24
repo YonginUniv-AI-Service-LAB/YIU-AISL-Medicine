@@ -25,7 +25,7 @@ import MedicinePage from './MedicinePage/MedicinePage';
 import CalendarScreen from '../Components/CalendarPage/calendar';
 import SharePage from './SharePage/SharePage';
 import AddScheduleScreen from '../Components/CalendarPage/AddScheduleScreen';
-import { MedicineProvider } from '../contexts/MedicineContext';
+import MedicineDetailScreen from '../Components/CalendarPage/MedicineDetailScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -146,6 +146,15 @@ export default function RootNavigator() {
             <Stack.Screen
               name="AddSchedule"
               component={AddScheduleScreen}
+              options={{
+                presentation: 'modal',
+                animation: 'slide_from_bottom',
+              }}
+            />
+
+            <Stack.Screen
+              name="MedicineDetail"
+              component={MedicineDetailScreen}
               options={{
                 presentation: 'modal',
                 animation: 'slide_from_bottom',
