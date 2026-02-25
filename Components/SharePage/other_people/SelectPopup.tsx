@@ -1,4 +1,3 @@
-
 // 나(신청자): 친구의 이메일을 입력해 신청을 보냄.
 
 // 상대방(수신자): 내 신청을 확인하고 '수락' 또는 '거절'을 선택함. (상대방 시점 테스트)
@@ -22,16 +21,23 @@ interface Props {
   onClose: () => void;
   senderEmail: string; // FrendAddPopup에서 입력한 그 이메일
   // 🔹 추가: 수락 시 부모의 목록에 추가하기 위한 함수
-  onAccept: (email: string) => void; 
+  onAccept: (email: string) => void;
 }
 
 type Step = 'DECIDE' | 'OTHER_RESULT' | 'MY_RESULT';
 
-export default function SelectPopup({ visible, onClose, senderEmail, onAccept }: Props) {
+export default function SelectPopup({
+  visible,
+  onClose,
+  senderEmail,
+  onAccept,
+}: Props) {
   const [step, setStep] = useState<Step>('DECIDE');
-  const [processType, setProcessType] = useState<'ACCEPT' | 'REJECT' | null>(null);
-  
-  const myName = "오성준"; // 나
+  const [processType, setProcessType] = useState<'ACCEPT' | 'REJECT' | null>(
+    null,
+  );
+
+  const myName = '오성준'; // 나
 
   const handleClose = () => {
     setStep('DECIDE');
@@ -42,12 +48,12 @@ export default function SelectPopup({ visible, onClose, senderEmail, onAccept }:
   // 1단계: 상대방이 수락/거절 선택
   const handleDecision = (type: 'ACCEPT' | 'REJECT') => {
     setProcessType(type);
-    
+
     // 🔥 [핵심 로직] 상대방이 '수락'을 누른 시점에 부모의 friendList에 추가
     if (type === 'ACCEPT') {
       onAccept(senderEmail);
     }
-    
+
     setStep('OTHER_RESULT'); // 선택 후 상대방 결과 화면으로 이동
   };
 
@@ -57,7 +63,12 @@ export default function SelectPopup({ visible, onClose, senderEmail, onAccept }:
   };
 
   return (
-    <Modal transparent animationType="fade" visible={visible} onRequestClose={handleClose}>
+    <Modal
+      transparent
+      animationType="fade"
+      visible={visible}
+      onRequestClose={handleClose}
+    >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.overlay}>
           <View style={styles.modalContainer}>
@@ -75,15 +86,15 @@ export default function SelectPopup({ visible, onClose, senderEmail, onAccept }:
                 </View>
                 <View style={styles.modalActions}>
                   {/* 수락 버튼 */}
-                  <TouchableOpacity 
-                    style={styles.acceptButton} 
+                  <TouchableOpacity
+                    style={styles.acceptButton}
                     onPress={() => handleDecision('ACCEPT')}
                   >
                     <Text style={styles.acceptButtonText}>수락</Text>
                   </TouchableOpacity>
                   {/* 거절 버튼 */}
-                  <TouchableOpacity 
-                    style={styles.confirmButton} 
+                  <TouchableOpacity
+                    style={styles.confirmButton}
                     onPress={() => handleDecision('REJECT')}
                   >
                     <Text style={styles.confirmButtonText}>거절</Text>
@@ -97,13 +108,16 @@ export default function SelectPopup({ visible, onClose, senderEmail, onAccept }:
               <View style={{ width: '100%', alignItems: 'center' }}>
                 <View style={[styles.successContent, { marginTop: 20 }]}>
                   <Text style={[styles.successMessage]}>
-                    {processType === 'ACCEPT' 
-                      ? `[상대방 시점 결과]\n'${myName}'님과 친구가 되었습니다.` 
+                    {processType === 'ACCEPT'
+                      ? `[상대방 시점 결과]\n'${myName}'님과 친구가 되었습니다.`
                       : `[상대방 시점 결과]\n'${myName}'님의 신청을 거절했습니다.`}
                   </Text>
                 </View>
                 <View style={styles.modalActions}>
-                  <TouchableOpacity style={styles.confirmButton} onPress={goToMyResult}>
+                  <TouchableOpacity
+                    style={styles.confirmButton}
+                    onPress={goToMyResult}
+                  >
                     <Text style={styles.confirmButtonText}>닫기</Text>
                   </TouchableOpacity>
                 </View>
@@ -114,20 +128,26 @@ export default function SelectPopup({ visible, onClose, senderEmail, onAccept }:
             {step === 'MY_RESULT' && (
               <View style={{ width: '100%', alignItems: 'center' }}>
                 <View style={[styles.successContent, { marginTop: 20 }]}>
-                  <Text style={styles.successMessage}>
-                    {processType === 'ACCEPT' 
-                      ? `[내 시점 결과]\n‘${senderEmail}’님과\n친구가 되었습니다!` 
+                  <Text
+                    style={[styles.successMessage, { flexShrink: 1 }]}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.8}
+                  >
+                    {processType === 'ACCEPT'
+                      ? `[내 시점 결과]\n‘${senderEmail}’님과\n친구가 되었습니다!`
                       : `[내 시점 결과]\n‘${senderEmail}’님이\n신청을 거절했습니다.`}
                   </Text>
                 </View>
                 <View style={styles.modalActions}>
-                  <TouchableOpacity style={styles.confirmButton} onPress={handleClose}>
+                  <TouchableOpacity
+                    style={styles.confirmButton}
+                    onPress={handleClose}
+                  >
                     <Text style={styles.confirmButtonText}>닫기</Text>
                   </TouchableOpacity>
                 </View>
               </View>
             )}
-
           </View>
         </View>
       </TouchableWithoutFeedback>

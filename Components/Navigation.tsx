@@ -131,7 +131,7 @@ export default function RootNavigator() {
           />
 
           <Stack.Navigator
-            initialRouteName="Main"
+            initialRouteName="LoginPage"
             screenOptions={{ headerShown: false }}
           >
             <Stack.Screen name="LoginPage" component={LoginPage} />

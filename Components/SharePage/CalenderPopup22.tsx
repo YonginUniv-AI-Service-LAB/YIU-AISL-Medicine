@@ -17,12 +17,7 @@ interface Props {
   isEditable: boolean;
 }
 
-export default function CalendarPopup({
-  visible,
-  onClose,
-  userName,
-  isEditable,
-}: Props) {
+export default function CalendarPopup({ visible, onClose, userName }: Props) {
   return (
     <Modal
       transparent
@@ -31,7 +26,6 @@ export default function CalendarPopup({
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
-        {/* 스타일 파일에 정의된 modalContainer 사용 */}
         <View style={styles.modalContainer}>
           <View style={styles.header}>
             <View style={styles.titleRow}>
@@ -39,14 +33,14 @@ export default function CalendarPopup({
                 source={require('../../assets/images/share/calender.png')}
                 style={styles.calendarIcon}
               />
-              {/* userName이 없을 경우를 대비한 방어 코드 */}
               <Text style={styles.title}>
                 {userName
                   ? `${userName.split('@')[0]}님의 시간표`
                   : '친구의 시간표'}
               </Text>
             </View>
-            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+
+            <TouchableOpacity onPress={onClose}>
               <Text style={styles.closeText}>✕</Text>
             </TouchableOpacity>
           </View>
@@ -54,7 +48,8 @@ export default function CalendarPopup({
           <View style={styles.divider} />
 
           <ScrollView showsVerticalScrollIndicator={false}>
-            <CalendarGrid isEditable={isEditable} />
+            {/* 🔥 여기 중요 */}
+            <CalendarGrid onClose={onClose} />
           </ScrollView>
 
           <TouchableOpacity style={styles.confirmButton} onPress={onClose}>

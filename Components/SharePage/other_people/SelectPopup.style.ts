@@ -49,7 +49,6 @@ export const styles = StyleSheet.create({
   /* 메시지 영역 */
   successContent: {
     width: '100%',
-    height: hp(64),
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: hp(24),
@@ -106,5 +105,5 @@ export const styles = StyleSheet.create({
   successContainer: {
     width: '100%',
     alignItems: 'center',
-  }
+  },
 });

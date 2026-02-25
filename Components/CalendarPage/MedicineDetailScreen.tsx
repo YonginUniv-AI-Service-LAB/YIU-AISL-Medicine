@@ -64,14 +64,14 @@ const MedicineDetailScreen: React.FC = () => {
 
   const { width } = useWindowDimensions();
 
-  const data = route.params?.medicine;
+  const data = route.params?.medicine ?? {};
   const [modalVisible, setModalVisible] = useState(false);
 
   const timeWidth = 40;
   const cellSize = (width - timeWidth) / 7;
 
-  const periodNum = Number(data.period);
-  const remainNum = Number(data.remain);
+  const periodNum = Number(data?.period ?? 0);
+  const remainNum = Number(data?.remain ?? 0);
 
   /* 데이터 없을 때 */
   if (!data) {
@@ -295,7 +295,7 @@ const MedicineDetailScreen: React.FC = () => {
                 </View>
 
                 {/* ⭐ 여기 중요 */}
-                {data.period && (
+                {data.period && !numbers.includes(Number(data.period)) && (
                   <Text style={{ marginTop: 10, color: '#6B7280' }}>
                     직접 입력: {Number(data.period)}일
                   </Text>
@@ -322,7 +322,7 @@ const MedicineDetailScreen: React.FC = () => {
                 </View>
 
                 {/* ⭐ 여기 중요 */}
-                {data.remain && (
+                {data.remain && !numbers.includes(Number(data.remain)) && (
                   <Text style={{ marginTop: 10, color: '#6B7280' }}>
                     직접 입력: {Number(data.remain)}회
                   </Text>
