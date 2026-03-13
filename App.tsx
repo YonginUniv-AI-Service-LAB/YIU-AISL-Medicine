@@ -13,6 +13,9 @@ import { ScheduleProvider } from './contexts/ScheduleContext';
 import { MedicineProvider } from './contexts/MedicineContext';
 import { View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
+import axios from 'axios';
+
+axios.defaults.withCredentials = true;
 
 // 자동 숨김 방지 (앱 시작 시 1회)
 SplashScreen.preventAutoHideAsync();
