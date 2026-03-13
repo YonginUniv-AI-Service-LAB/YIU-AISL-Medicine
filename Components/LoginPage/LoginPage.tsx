@@ -7,7 +7,8 @@ import {
   Image,
   Alert,
 } from 'react-native';
-import styles from './LoginPage.style'; 
+import axios from 'axios';
+import styles from './LoginPage.style';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 type Props = NativeStackScreenProps<any, 'LoginPage'>;
@@ -16,12 +17,29 @@ function LoginPage({ navigation }: Props) {
   const [id, setId] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!id || !password) {
       Alert.alert('알림', '아이디와 비밀번호를 모두 입력해주세요.');
       return;
     }
-    navigation.replace('Main'); 
+
+    try {
+      const response = await axios.post(
+        'http://192.168.0.118:8080/auth/login',
+        {
+          email: id,
+          password: password,
+        },
+      );
+
+      console.log(response.data);
+
+      Alert.alert('로그인 성공');
+      navigation.replace('Main');
+    } catch (error) {
+      console.log(error);
+      Alert.alert('로그인 실패', '아이디 또는 비밀번호를 확인하세요.');
+    }
   };
 
   return (
@@ -65,8 +83,9 @@ function LoginPage({ navigation }: Props) {
 
         <View style={styles.verticalSeparator} />
 
-        {/* 목적지 이름을 ResetpasswordPage로 일치시킴 */}
-        <TouchableOpacity onPress={() => navigation.navigate('ResetpasswordPage')}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('ResetpasswordPage')}
+        >
           <Text style={styles.bottomText}>비밀번호 재설정</Text>
         </TouchableOpacity>
       </View>
