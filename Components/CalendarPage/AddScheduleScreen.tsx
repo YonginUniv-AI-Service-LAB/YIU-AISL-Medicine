@@ -12,11 +12,14 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useRoute } from '@react-navigation/native';
+import axios from 'axios';
 
 import styles from './AddSchedule.style';
 import { DAYS, HOURS } from './calendarData';
 import { useSchedule } from '../../contexts/ScheduleContext';
 import { useMedicine } from '../../contexts/MedicineContext';
+
+const API_BASE_URL = 'http://192.168.0.118:8080';
 
 const numbers = Array.from({ length: 12 }, (_, i) => i + 1);
 const doseCountNumbers = [1, 2, 3];
@@ -76,6 +79,29 @@ const AddScheduleScreen: React.FC = () => {
   const route = useRoute<any>();
   const editData = route.params?.editData;
   const isEdit = !!editData;
+
+  useEffect(() => {
+    if (editData) {
+      setMedicineName(editData.name ?? '');
+      setCategory(editData.category ?? '');
+      setMemo(editData.caution ?? '');
+
+      setDoseCount(editData.dailyDoseCount ?? null);
+      setDosePeriod(editData.durationDays ?? null);
+      setRemainCount(editData.totalQuantity ?? null);
+
+      if (editData.schedules) {
+        const hours = editData.schedules.map((s: any) =>
+          parseInt(s.intakeTime.split(':')[0], 10),
+        );
+
+        const days = editData.schedules.map((s: any) => s.dayOfWeek);
+
+        setDoseHours(hours);
+        setDoseDays(days);
+      }
+    }
+  }, [editData]);
 
   const { addSchedules, removeSchedulesByMedicineId } = useSchedule();
 
@@ -202,9 +228,7 @@ const AddScheduleScreen: React.FC = () => {
     setSelectedCells([...new Set(newCells)]);
     setModalVisible(false);
   };
-
-  /* 변경하기 → 미리보기 */
-  const saveSchedule = () => {
+  const saveSchedule = async () => {
     const medicineId = isEdit ? editData.id : Date.now().toString();
 
     const today =
@@ -214,70 +238,80 @@ const AddScheduleScreen: React.FC = () => {
       '-' +
       String(new Date().getDate()).padStart(2, '0');
 
-    // 시간 문자열
     const times = doseHours.map((h) => `${String(h).padStart(2, '0')}:00`);
-
     const days = doseDays?.map((d) => d[0]) ?? [];
 
-    // ✅ 복용 횟수 (직접 입력 포함)
     const count =
       doseCount ??
       (doseCountInput ? Number(doseCountInput) : undefined) ??
       times.length;
 
-    // ✅ 복용 기간 (직접 입력 포함)
     const period =
       dosePeriod ?? (dosePeriodInput ? Number(dosePeriodInput) : undefined);
 
-    // ✅ 남은 복용 횟수 (직접 입력 포함)
     const remain =
       remainCount ?? (remainInput ? Number(remainInput) : undefined);
 
-    const data = {
+    /* ⭐ schedules 생성 (백엔드 DTO용) */
+    const dayMap: any = {
+      월: 1,
+      화: 2,
+      수: 3,
+      목: 4,
+      금: 5,
+      토: 6,
+      일: 7,
+    };
+
+    const schedules: any[] = [];
+
+    days.forEach((day) => {
+      times.forEach((time) => {
+        schedules.push({
+          dayOfWeek: dayMap[day],
+          intakeTime: time,
+        });
+      });
+    });
+
+    const apiData = {
+      name: medicineName,
+      category: category,
+      dailyDoseCount: count,
+      durationDays: period,
+      totalQuantity: remain,
+      caution: memo,
+      schedules: schedules,
+    };
+
+    const localData = {
       id: medicineId,
-      name: medicineName || '약 이름 없음',
-      category: category || '미분류',
+      name: medicineName,
+      category,
       count,
       times,
       days,
       period,
       remain,
-      memo: memo || '',
+      memo,
       date: today,
       status: 'before' as const,
     };
+    try {
+      if (isEdit) {
+        await axios.put(`${API_BASE_URL}/medicines/${editData.id}`, apiData);
 
-    if (isEdit) {
-      updateMedicine(medicineId, data);
-      removeSchedulesByMedicineId(medicineId);
+        console.log('약 수정 성공');
+      } else {
+        const res = await axios.post(`${API_BASE_URL}/medicines`, apiData);
 
-      if (selectedCells?.length > 0) {
-        const converted = selectedCells.map((cell) => {
-          const [dayIndex, hourIndex] = cell.split('-').map(Number);
-          return {
-            medicineId,
-            dayIndex,
-            hourIndex,
-          };
-        });
-
-        addSchedules(converted);
+        console.log('약 등록 성공', res.data);
       }
-    } else {
-      addMedicine(data);
 
-      if (selectedCells.length > 0) {
-        const converted = selectedCells.map((cell) => {
-          const [dayIndex, hourIndex] = cell.split('-').map(Number);
-          return {
-            medicineId,
-            dayIndex,
-            hourIndex,
-          };
-        });
-
-        addSchedules(converted);
-      }
+      navigation.goBack();
+    } catch (error: any) {
+      console.log('약 저장 실패', error);
+      console.log(error.response?.data);
     }
 
     navigation.goBack();

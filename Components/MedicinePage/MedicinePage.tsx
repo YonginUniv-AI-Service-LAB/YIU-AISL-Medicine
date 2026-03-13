@@ -1,4 +1,6 @@
 import React, { useState, useMemo } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback } from 'react';
 import {
   View,
   Text,
@@ -16,15 +18,20 @@ import { useMedicine } from '../../contexts/MedicineContext';
 import { MedicineSchedule } from '../../contexts/MedicineContext';
 import { useSchedule } from '../../contexts/ScheduleContext';
 
+import axios from 'axios';
+
+const API_BASE_URL = 'http://192.168.0.118:8080';
+
 const MedicinePage: React.FC = () => {
   const navigation = useNavigation<any>();
   const { removeSchedulesByMedicineId } = useSchedule();
   const { medicines, removeMedicine, updateStatus } = useMedicine();
   const { schedules } = useSchedule();
-  const handleDeleteMedicine = (medicineId: string) => {
-    removeSchedulesByMedicineId(medicineId);
-    removeMedicine(medicineId);
+  const handleDeleteMedicine = (medicineId: number) => {
+    deleteMedicineApi(medicineId);
   };
+
+  const [apiMedicines, setApiMedicines] = useState<any[]>([]);
 
   const [baseDate, setBaseDate] = useState(new Date());
   const [isCalendarVisible, setIsCalendarVisible] = useState(false);
@@ -47,6 +54,34 @@ const MedicinePage: React.FC = () => {
     return '#2563EB'; // 파랑
   };
 
+  const updateLocalStatus = (
+    id: number,
+    status: 'done' | 'before' | 'missed',
+  ) => {
+    setApiMedicines((prev) =>
+      prev.map((m) =>
+        m.id === id
+          ? {
+              ...m,
+              status: status,
+            }
+          : m,
+      ),
+    );
+  };
+
+  const deleteMedicineApi = async (medicineId: number) => {
+    try {
+      await axios.delete(`${API_BASE_URL}/medicines/${medicineId}`);
+      console.log('약 삭제 성공');
+
+      // 화면에서도 삭제
+      setApiMedicines((prev) => prev.filter((m) => m.id !== medicineId));
+    } catch (error) {
+      console.log('약 삭제 실패', error);
+    }
+  };
+
   const selectedDateString =
     baseDate.getFullYear() +
     '-' +
@@ -54,8 +89,30 @@ const MedicinePage: React.FC = () => {
     '-' +
     String(baseDate.getDate()).padStart(2, '0');
 
-  const todayMedicines: MedicineSchedule[] = medicines.filter(
-    (m) => m.date === selectedDateString,
+  const todayMedicines = apiMedicines.filter((m) => {
+    const start = new Date(m.startDate);
+    const end = new Date(m.endDate);
+    const current = new Date(selectedDateString);
+
+    return current >= start && current <= end;
+  });
+
+  useFocusEffect(
+    useCallback(() => {
+      const fetchMedicines = async () => {
+        try {
+          const res = await axios.get(`${API_BASE_URL}/medicines`);
+
+          console.log('약 목록', res.data);
+
+          setApiMedicines(res.data);
+        } catch (error) {
+          console.log('약 목록 불러오기 실패', error);
+        }
+      };
+
+      fetchMedicines();
+    }, []),
   );
 
   const weekData = useMemo(() => {
@@ -185,10 +242,20 @@ const MedicinePage: React.FC = () => {
         {/* ===== 여기부터만 스크롤 ===== */}
         <View style={{ flex: 1 }}>
           <ScrollView showsVerticalScrollIndicator={false}>
-            {todayMedicines.map((item) => {
-              const firstTime = item.times[0] ?? '00:00';
+            {todayMedicines.map((item: any) => {
+              const firstTime = item.schedules?.[0]?.intakeTime ?? '00:00';
               const hour = parseInt(firstTime.split(':')[0], 10);
               const ampm = hour < 12 ? '오전' : '오후';
+
+              const dayMap: any = {
+                1: '월',
+                2: '화',
+                3: '수',
+                4: '목',
+                5: '금',
+                6: '토',
+                7: '일',
+              };
 
               return (
                 <View key={item.id} style={styles.scheduleCard}>
@@ -293,41 +360,44 @@ const MedicinePage: React.FC = () => {
                     )}
 
                     {/* ⭐ 복용횟수 */}
-                    {item.count && (
-                      <Text style={styles.scheduleText}>
-                        • 복용 횟수 : 하루 {String(item.count)}번
-                      </Text>
-                    )}
-
                     <Text style={styles.scheduleText}>
-                      • 복용 시간 : {String(item.times.join(', '))}
+                      • 복용 횟수 : 하루 {item.dailyDoseCount ?? '-'}번
                     </Text>
 
-                    {item.days && item.days.length > 0 && (
-                      <Text style={styles.scheduleText}>
-                        • 복용 간격 : {item.days.join(', ')}
-                      </Text>
-                    )}
-
                     <Text style={styles.scheduleText}>
-                      • 복용 기간 : {item.period ? `${item.period}일` : '-'}
+                      • 복용 시간 :{' '}
+                      {item.schedules?.length
+                        ? item.schedules
+                            .map((s: any) => s.intakeTime)
+                            .join(', ')
+                        : '-'}
                     </Text>
 
-                    {item.remain !== undefined && item.remain !== null ? (
-                      <Text style={styles.scheduleText}>
-                        • 남은 복용 횟수: {item.remain}회
-                      </Text>
-                    ) : (
-                      <Text style={styles.scheduleText}>
-                        • 남은 복용 횟수: 없음
-                      </Text>
-                    )}
+                    <Text style={styles.scheduleText}>
+                      • 복용 간격 :
+                      {item.schedules?.length
+                        ? [
+                            ...new Set(
+                              item.schedules.map(
+                                (s: any) => dayMap[s.dayOfWeek],
+                              ),
+                            ),
+                          ].join(', ')
+                        : '-'}
+                    </Text>
 
-                    {item.memo && (
-                      <Text style={styles.scheduleText}>
-                        • 주의사항 : {item.memo}
-                      </Text>
-                    )}
+                    <Text style={styles.scheduleText}>
+                      • 복용 기간 :{' '}
+                      {item.durationDays ? `${item.durationDays}일` : '-'}
+                    </Text>
+
+                    <Text style={styles.scheduleText}>
+                      • 남은 복용 횟수: {item.totalQuantity ?? '-'}회
+                    </Text>
+
+                    <Text style={styles.scheduleText}>
+                      • 주의사항 : {item.caution ?? '-'}
+                    </Text>
                   </View>
                 </View>
               );
@@ -397,8 +467,12 @@ const MedicinePage: React.FC = () => {
                 <TouchableOpacity
                   style={styles.confirmBtn}
                   onPress={() => {
-                    if (selectedMedicineId)
-                      updateStatus(selectedMedicineId, selectedStatus);
+                    if (selectedMedicineId) {
+                      updateLocalStatus(
+                        Number(selectedMedicineId),
+                        selectedStatus,
+                      );
+                    }
                     setStatusModalVisible(false);
                   }}
                 >
@@ -453,13 +527,14 @@ const MedicinePage: React.FC = () => {
                   onPress={() => {
                     if (confirmType === 'edit') {
                       navigation.navigate('AddSchedule', {
-                        editData: medicines.find(
+                        editData: apiMedicines.find(
                           (m) => m.id === selectedMedicineId,
                         ),
                       });
                     } else if (confirmType === 'delete' && selectedMedicineId) {
-                      handleDeleteMedicine(selectedMedicineId);
+                      handleDeleteMedicine(Number(selectedMedicineId));
                     }
+
                     setConfirmModalVisible(false);
                   }}
                 >
