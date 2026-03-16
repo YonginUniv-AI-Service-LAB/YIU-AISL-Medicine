@@ -37,8 +37,14 @@ function LoginPage({ navigation }: Props) {
 
       const user = response.data.data.user;
 
-      navigation.replace('Main', {
-        user: user,
+      navigation.reset({
+        index: 0,
+        routes: [
+          {
+            name: 'App',
+            params: { user: user },
+          },
+        ],
       });
     } catch (error) {
       console.log(error);

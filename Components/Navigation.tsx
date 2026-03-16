@@ -15,20 +15,27 @@ import {
   SafeAreaProvider,
 } from 'react-native-safe-area-context';
 
-// 페이지 임포트
+/* -------------------- 페이지 -------------------- */
+
 import LoginPage from '../Components/LoginPage/LoginPage';
 import SignUpPage from '../Components/SignUpPage/SignUpPage';
 import ResetpasswordPage from '../Components/ResetpasswordPage/ResetpasswordPage';
 import PwdCompletePage from '../Components/ResetpasswordPage/pwd';
+
 import HomeDetail from '../Components/homePage/HomePageDetail';
 import MedicinePage from './MedicinePage/MedicinePage';
 import CalendarScreen from '../Components/CalendarPage/calendar';
 import SharePage from './SharePage/SharePage';
+
 import AddScheduleScreen from '../Components/CalendarPage/AddScheduleScreen';
 import MedicineDetailScreen from '../Components/CalendarPage/MedicineDetailScreen';
 
+/* -------------------- Navigator -------------------- */
+
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
+
+/* -------------------- 아이콘 -------------------- */
 
 const ICONS = {
   beforeHome: require('../assets/images/Navigation/home_off.png'),
@@ -41,12 +48,17 @@ const ICONS = {
   afterShare: require('../assets/images/Navigation/share_on.png'),
 };
 
+/* -------------------- 기기 분류 -------------------- */
+
 function useDeviceCategory(): 'smallPhone' | 'phone' | 'tablet' {
   const { width } = useWindowDimensions();
+
   if (width < 360) return 'smallPhone';
   if (width >= 768) return 'tablet';
   return 'phone';
 }
+
+/* -------------------- Bottom Tab -------------------- */
 
 function MainTabs() {
   const insets = useSafeAreaInsets();
@@ -63,6 +75,7 @@ function MainTabs() {
 
   const extra =
     sizeCategory === 'tablet' ? 10 : sizeCategory === 'smallPhone' ? -5 : 0;
+
   const TAB_BAR_HEIGHT = baseHeight + insets.bottom + extra;
 
   return (
@@ -83,6 +96,7 @@ function MainTabs() {
         },
         tabBarIcon: ({ focused }) => {
           let src;
+
           switch (route.name) {
             case 'Home':
               src = focused ? ICONS.afterHome : ICONS.beforeHome;
@@ -99,6 +113,7 @@ function MainTabs() {
             default:
               src = ICONS.beforeHome;
           }
+
           return (
             <Image
               source={src}
@@ -117,6 +132,49 @@ function MainTabs() {
   );
 }
 
+/* -------------------- 로그인 Stack -------------------- */
+
+function AuthStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="LoginPage" component={LoginPage} />
+      <Stack.Screen name="SignUp" component={SignUpPage} />
+      <Stack.Screen name="ResetpasswordPage" component={ResetpasswordPage} />
+      <Stack.Screen name="pwd" component={PwdCompletePage} />
+    </Stack.Navigator>
+  );
+}
+
+/* -------------------- 앱 Stack -------------------- */
+
+function AppStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="MainTabs" component={MainTabs} />
+
+      <Stack.Screen
+        name="AddSchedule"
+        component={AddScheduleScreen}
+        options={{
+          presentation: 'modal',
+          animation: 'slide_from_bottom',
+        }}
+      />
+
+      <Stack.Screen
+        name="MedicineDetail"
+        component={MedicineDetailScreen}
+        options={{
+          presentation: 'modal',
+          animation: 'slide_from_bottom',
+        }}
+      />
+    </Stack.Navigator>
+  );
+}
+
+/* -------------------- Root Navigator -------------------- */
+
 export default function RootNavigator() {
   const isIOS = Platform.OS === 'ios';
 
@@ -130,36 +188,12 @@ export default function RootNavigator() {
             translucent
           />
 
-          <Stack.Navigator
-            initialRouteName="LoginPage"
-            screenOptions={{ headerShown: false }}
-          >
-            <Stack.Screen name="LoginPage" component={LoginPage} />
-            <Stack.Screen name="SignUp" component={SignUpPage} />
-            <Stack.Screen
-              name="ResetpasswordPage"
-              component={ResetpasswordPage}
-            />
-            <Stack.Screen name="pwd" component={PwdCompletePage} />
-            <Stack.Screen name="Main" component={MainTabs} />
+          <Stack.Navigator screenOptions={{ headerShown: false }}>
+            {/* 로그인 */}
+            <Stack.Screen name="Auth" component={AuthStack} />
 
-            <Stack.Screen
-              name="AddSchedule"
-              component={AddScheduleScreen}
-              options={{
-                presentation: 'modal',
-                animation: 'slide_from_bottom',
-              }}
-            />
-
-            <Stack.Screen
-              name="MedicineDetail"
-              component={MedicineDetailScreen}
-              options={{
-                presentation: 'modal',
-                animation: 'slide_from_bottom',
-              }}
-            />
+            {/* 앱 */}
+            <Stack.Screen name="App" component={AppStack} />
           </Stack.Navigator>
         </View>
       </NavigationContainer>

@@ -89,12 +89,29 @@ export default function SignUpScreen() {
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
+  useEffect(() => {
+    setEmail('');
+    setEmailSent(false);
+    setCertNum('');
+    setCertNumValid(false);
+    setTimerSec(0);
+    setUserId('');
+    setIdChecked(false);
+    setPw('');
+    setPwCheck('');
+  }, []);
+
   // --- 핸들러 ---
 
   // 1. 이메일 인증번호 발송
   const handleEmailVerify = async () => {
+    if (!email || !email.includes('@')) {
+      Alert.alert('알림', '올바른 이메일을 입력해주세요.');
+      return;
+    }
+
     try {
-      console.log('이메일 인증 요청 시작');
+      console.log('이메일 인증 요청:', email);
 
       await axios.post(`${API_BASE_URL}/emails/verification-code/send`, {
         email: email,
@@ -103,9 +120,12 @@ export default function SignUpScreen() {
 
       Alert.alert('인증번호 발송');
 
-      setEmailSent(true); // 체크 아이콘 표시
+      setEmailSent(true);
+      setCertNum('');
+      setCertNumValid(false);
       setTimerSec(600);
     } catch (error) {
+      console.log('이메일 전송 오류', error);
       Alert.alert('이메일 전송 실패');
     }
   };
@@ -113,6 +133,11 @@ export default function SignUpScreen() {
   // 2. 인증번호 체크
   const onChangeCertNum = async (v: string) => {
     setCertNum(v);
+
+    if (!email) {
+      Alert.alert('알림', '먼저 이메일 인증을 요청해주세요.');
+      return;
+    }
 
     if (v.length === 6) {
       try {
@@ -201,6 +226,8 @@ export default function SignUpScreen() {
     } else if (timerSec === 0 && emailSent) {
       Alert.alert('알림', '인증시간이 만료되었습니다. 다시 인증해주세요.');
       setEmailSent(false);
+      setCertNum('');
+      setCertNumValid(false);
 
       if (timerRef.current) {
         clearInterval(timerRef.current);

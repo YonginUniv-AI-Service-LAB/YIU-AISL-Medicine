@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCallback } from 'react';
 import {
   View,
@@ -31,14 +32,58 @@ const MedicinePage: React.FC = () => {
     deleteMedicineApi(medicineId);
   };
 
+  const saveStatusLocal = async (
+    medicineId: number, // medicineId 타입 지정
+    status: string, // status는 다양한 상태를 받을 수 있으므로 string으로
+    quantity: number, // quantity 타입 지정
+  ) => {
+    try {
+      const stored = await AsyncStorage.getItem('medicineStatus');
+      const data = stored ? JSON.parse(stored) : {};
+
+      data[medicineId] = {
+        status,
+        quantity,
+      };
+
+      await AsyncStorage.setItem('medicineStatus', JSON.stringify(data));
+    } catch (e) {
+      console.log('상태 저장 실패', e);
+    }
+  };
+  const applySavedStatus = async (medicines: any[]) => {
+    try {
+      const stored = await AsyncStorage.getItem('medicineStatus');
+      if (!stored) return medicines;
+
+      const data = JSON.parse(stored);
+
+      return medicines.map((m) => {
+        const saved = data[m.id];
+
+        if (!saved) return m;
+
+        return {
+          ...m,
+          status: saved.status,
+          totalQuantity: saved.quantity,
+        };
+      });
+    } catch (e) {
+      console.log('상태 불러오기 실패', e);
+      return medicines;
+    }
+  };
+
   const [apiMedicines, setApiMedicines] = useState<any[]>([]);
+  const [userName, setUserName] = useState('사용자');
 
   const [baseDate, setBaseDate] = useState(new Date());
   const [isCalendarVisible, setIsCalendarVisible] = useState(false);
 
   const [statusModalVisible, setStatusModalVisible] = useState(false);
   const [menuVisibleId, setMenuVisibleId] = useState<string | null>(null);
-  const [selectedMedicineId, setSelectedMedicineId] = useState<string | null>(
+  const [selectedMedicineId, setSelectedMedicineId] = useState<number | null>(
     null,
   );
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
@@ -48,26 +93,62 @@ const MedicinePage: React.FC = () => {
   const [selectedStatus, setSelectedStatus] = useState<
     'done' | 'before' | 'missed'
   >('before');
-  const getStatusColor = (status: 'done' | 'before' | 'missed') => {
-    if (status === 'done') return '#16A34A'; // 초록
-    if (status === 'missed') return '#EF4444'; // 빨강
-    return '#2563EB'; // 파랑
+  const getStatusColor = (status: string) => {
+    if (status === 'done') return '#16A34A';
+    if (status === 'missed') return '#EF4444';
+    return '#2563EB';
   };
 
   const updateLocalStatus = (
-    id: number,
-    status: 'done' | 'before' | 'missed',
+    medicineId: number, // medicineId 타입 지정
+    status: 'done' | 'before' | 'missed', // status 타입 지정
   ) => {
     setApiMedicines((prev) =>
-      prev.map((m) =>
-        m.id === id
-          ? {
-              ...m,
-              status: status,
-            }
-          : m,
-      ),
+      prev.map((m) => {
+        if (m.id !== medicineId) return m;
+
+        let newQuantity = m.totalQuantity;
+
+        if (status === 'done' && m.totalQuantity > 0) {
+          newQuantity = m.totalQuantity - 1;
+        }
+
+        return {
+          ...m,
+          status,
+          totalQuantity: newQuantity,
+        };
+      }),
     );
+  };
+
+  const updateStatusApi = async (
+    medicineId: number, // medicineId 타입 지정
+    status: 'done' | 'before' | 'missed', // status 타입 지정
+  ) => {
+    const statusMap: { [key: string]: string } = {
+      done: 'TAKEN',
+      before: 'PENDING',
+      missed: 'MISSED',
+    };
+
+    try {
+      const response = await axios.patch(
+        `${API_BASE_URL}/intakes/${medicineId}`,
+        {
+          status: statusMap[status],
+        },
+        {
+          withCredentials: true,
+        },
+      );
+
+      if (response.status === 200) {
+        console.log('상태 변경 요청 성공', medicineId, statusMap[status]);
+      }
+    } catch (error) {
+      console.log('복용 상태 변경 실패', error);
+    }
   };
 
   const deleteMedicineApi = async (medicineId: number) => {
@@ -89,23 +170,56 @@ const MedicinePage: React.FC = () => {
     '-' +
     String(baseDate.getDate()).padStart(2, '0');
 
-  const todayMedicines = apiMedicines.filter((m) => {
-    const start = new Date(m.startDate);
-    const end = new Date(m.endDate);
-    const current = new Date(selectedDateString);
+  const todayMedicines = apiMedicines;
 
-    return current >= start && current <= end;
-  });
+  const fetchUser = async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/users/me`, {
+        withCredentials: true,
+      });
+
+      const user = res.data?.data;
+
+      if (user?.name) {
+        setUserName(user.name);
+      }
+    } catch (error) {
+      console.log('사용자 조회 실패', error);
+    }
+  };
 
   useFocusEffect(
     useCallback(() => {
+      fetchUser();
+
       const fetchMedicines = async () => {
         try {
-          const res = await axios.get(`${API_BASE_URL}/medicines`);
+          const res = await axios.get(`${API_BASE_URL}/medicines`, {
+            withCredentials: true,
+          });
 
-          console.log('약 목록', res.data);
+          console.log('서버에서 받은 약 목록', res.data);
 
-          setApiMedicines(res.data);
+          const data = res.data?.data ?? res.data;
+
+          // 서버 status → 프론트 status 변환
+          const converted = data.map((m: any) => {
+            let status = 'before';
+
+            if (m.status === 'TAKEN') status = 'done';
+            if (m.status === 'MISSED') status = 'missed';
+            if (m.status === 'PENDING') status = 'before';
+
+            return {
+              ...m,
+              status,
+            };
+          });
+
+          const grouped = groupMedicines(converted);
+
+          const withLocalStatus = await applySavedStatus(grouped);
+          setApiMedicines(withLocalStatus);
         } catch (error) {
           console.log('약 목록 불러오기 실패', error);
         }
@@ -114,6 +228,23 @@ const MedicinePage: React.FC = () => {
       fetchMedicines();
     }, []),
   );
+
+  const groupMedicines = (data: any[]) => {
+    const map = new Map();
+
+    data.forEach((item) => {
+      if (!map.has(item.id)) {
+        map.set(item.id, {
+          ...item,
+          schedules: [],
+        });
+      }
+
+      map.get(item.id).schedules.push(...(item.schedules ?? []));
+    });
+
+    return Array.from(map.values());
+  };
 
   const weekData = useMemo(() => {
     const today = new Date();
@@ -169,7 +300,7 @@ const MedicinePage: React.FC = () => {
             style={styles.headerLogo}
           />
           <View style={styles.headerRight}>
-            <Text style={styles.userName}>000님</Text>
+            <Text style={styles.userName}>{userName}님</Text>
             <Text style={styles.dividerText}>|</Text>
             <TouchableOpacity>
               <Image
@@ -242,8 +373,8 @@ const MedicinePage: React.FC = () => {
         {/* ===== 여기부터만 스크롤 ===== */}
         <View style={{ flex: 1 }}>
           <ScrollView showsVerticalScrollIndicator={false}>
-            {todayMedicines.map((item: any) => {
-              const firstTime = item.schedules?.[0]?.intakeTime ?? '00:00';
+            {todayMedicines?.map((item: any, index: number) => {
+              const firstTime = item?.intakeTime || '00:00';
               const hour = parseInt(firstTime.split(':')[0], 10);
               const ampm = hour < 12 ? '오전' : '오후';
 
@@ -258,15 +389,13 @@ const MedicinePage: React.FC = () => {
               };
 
               return (
-                <View key={item.id} style={styles.scheduleCard}>
+                <View key={`${item.id}-${index}`} style={styles.scheduleCard}>
                   {/* 상단 */}
                   <View style={styles.scheduleHeader}>
                     <View
                       style={{ flexDirection: 'row', alignItems: 'center' }}
                     >
-                      <Text style={styles.scheduleTime}>
-                        {String(firstTime)}
-                      </Text>
+                      <Text style={styles.scheduleTime}>{firstTime}</Text>
                       <Text style={styles.scheduleAmPm}>{String(ampm)}</Text>
                       <Text
                         style={[
@@ -284,14 +413,17 @@ const MedicinePage: React.FC = () => {
 
                     <TouchableOpacity
                       onPress={() => {
-                        setSelectedMedicineId(item.id);
+                        const intakeId = item.schedules?.[0]?.id;
+
+                        setSelectedMedicineId(intakeId);
+                        setSelectedStatus(item.status ?? 'before');
+
                         setStatusModalVisible(true);
                       }}
                     >
                       <Text style={styles.takeBtn}>복용</Text>
                     </TouchableOpacity>
                   </View>
-
                   {/* 본문 */}
                   <View style={styles.scheduleBody}>
                     {menuVisibleId === item.id && (
@@ -359,18 +491,12 @@ const MedicinePage: React.FC = () => {
                       </Text>
                     )}
 
-                    {/* ⭐ 복용횟수 */}
                     <Text style={styles.scheduleText}>
                       • 복용 횟수 : 하루 {item.dailyDoseCount ?? '-'}번
                     </Text>
 
                     <Text style={styles.scheduleText}>
-                      • 복용 시간 :{' '}
-                      {item.schedules?.length
-                        ? item.schedules
-                            .map((s: any) => s.intakeTime)
-                            .join(', ')
-                        : '-'}
+                      • 복용 시간 : {item.intakeTime ?? '-'}
                     </Text>
 
                     <Text style={styles.scheduleText}>
@@ -468,11 +594,25 @@ const MedicinePage: React.FC = () => {
                   style={styles.confirmBtn}
                   onPress={() => {
                     if (selectedMedicineId) {
-                      updateLocalStatus(
-                        Number(selectedMedicineId),
-                        selectedStatus,
+                      const intakeId = Number(selectedMedicineId);
+
+                      const medicine = apiMedicines.find((m) =>
+                        m.schedules?.some((s: any) => s.id === intakeId),
                       );
+                      const newQuantity =
+                        selectedStatus === 'done'
+                          ? Math.max((medicine?.totalQuantity ?? 0) - 1, 0)
+                          : (medicine?.totalQuantity ?? 0);
+
+                      const medicineId = medicine?.id;
+
+                      updateLocalStatus(medicineId, selectedStatus);
+
+                      saveStatusLocal(medicineId, selectedStatus, newQuantity);
+
+                      updateStatusApi(intakeId, selectedStatus);
                     }
+
                     setStatusModalVisible(false);
                   }}
                 >

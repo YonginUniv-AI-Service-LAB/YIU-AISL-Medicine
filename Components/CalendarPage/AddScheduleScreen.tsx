@@ -75,7 +75,7 @@ const OptionBox = ({ title, children }: any) => (
 );
 
 const AddScheduleScreen: React.FC = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const editData = route.params?.editData;
   const isEdit = !!editData;
@@ -276,11 +276,11 @@ const AddScheduleScreen: React.FC = () => {
 
     const apiData = {
       name: medicineName,
-      category: category,
-      dailyDoseCount: count,
-      durationDays: period,
-      totalQuantity: remain,
-      caution: memo,
+      category: category || '',
+      dailyDoseCount: count || 1,
+      durationDays: period || 1,
+      totalQuantity: remain || 1,
+      caution: memo || '',
       schedules: schedules,
     };
 
@@ -313,8 +313,6 @@ const AddScheduleScreen: React.FC = () => {
       console.log('약 저장 실패', error);
       console.log(error.response?.data);
     }
-
-    navigation.goBack();
   };
 
   return (

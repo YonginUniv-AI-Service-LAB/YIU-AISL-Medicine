@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRoute } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -17,13 +19,17 @@ import SituationPopup from './SituationPopup';
 
 const API_BASE_URL = 'http://192.168.0.118:8080';
 
-// 반응형
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const wp = (size: number) => (size / 393) * SCREEN_WIDTH;
 
-// 차트 상수
 const RADIUS = wp(80);
 const CENTER = wp(90);
+
+/*
+========================
+차트 조각 컴포넌트
+========================
+*/
 
 const ChartSegment = ({
   startAngle,
@@ -35,8 +41,10 @@ const ChartSegment = ({
   const getPathData = (s: number, e: number, r: number) => {
     const x1 = CENTER + r * Math.cos((Math.PI * (s - 0.1)) / 180);
     const y1 = CENTER + r * Math.sin((Math.PI * (s - 0.1)) / 180);
+
     const x2 = CENTER + r * Math.cos((Math.PI * (e + 0.1)) / 180);
     const y2 = CENTER + r * Math.sin((Math.PI * (e + 0.1)) / 180);
+
     const largeArcFlag = e - s <= 180 ? '0' : '1';
 
     return `M ${CENTER} ${CENTER} L ${x1} ${y1} A ${r} ${r} 0 ${largeArcFlag} 1 ${x2} ${y2} Z`;
@@ -53,56 +61,14 @@ const ChartSegment = ({
         stroke={color}
         strokeWidth="0.5"
       />
-      <Path
-        d={getPathData(startAngle, endAngle, feedbackRadius)}
-        fill="transparent"
-        onPressIn={onPress}
-      />
     </G>
   );
 };
 
 export default function HomeDetailPage() {
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const [isMenuPopupVisible, setIsMenuPopupVisible] = useState(false);
-  const [isSituationVisible, setIsSituationVisible] = useState(false);
-  const [popupType, setPopupType] = useState<'logout' | 'reset' | 'withdraw'>(
-    'logout',
-  );
-
-  const [userName, setUserName] = useState('사용자');
   const route = useRoute<any>();
 
-  const fetchUser = async () => {
-    try {
-      const res = await axios.get(`${API_BASE_URL}/auth/me`, {
-        withCredentials: true,
-      });
-
-      const user = res.data?.data?.user;
-
-      if (user && user.name) {
-        setUserName(user.name);
-      }
-    } catch (error: any) {
-      console.log('사용자 조회 실패');
-      console.log(error?.response?.status);
-      console.log(error?.response?.data);
-    }
-  };
-
-  useEffect(() => {
-    const user = route?.params?.user;
-
-    // 로그인 화면에서 user를 넘겨준 경우
-    if (user?.name) {
-      setUserName(user.name);
-      return;
-    }
-
-    // user 정보가 없으면 서버에서 조회
-    fetchUser();
-  }, [route?.params]);
+  const [userName, setUserName] = useState('사용자');
 
   const [segments, setSegments] = useState([
     { label: '복용 완료', count: 0, color: '#189CEF', detail: '' },
@@ -110,55 +76,126 @@ export default function HomeDetailPage() {
     { label: '복용 전', count: 0, color: '#D9D9D9', detail: '' },
   ]);
 
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
+  const [isMenuPopupVisible, setIsMenuPopupVisible] = useState(false);
+  const [isSituationVisible, setIsSituationVisible] = useState(false);
+
+  const [popupType, setPopupType] = useState<'logout' | 'reset' | 'withdraw'>(
+    'logout',
+  );
+
   const today = new Date().toISOString().split('T')[0];
 
-  // API 호출
-  const fetchMedicationData = async () => {
+  /*
+  ========================
+  사용자 조회 API
+  ========================
+  */
+
+  const fetchUser = async () => {
     try {
-      const res = await axios.get(
-        `${API_BASE_URL}/medicines/daily?date=${today}`,
-        { withCredentials: true },
-      );
-      const data = res.data.data;
+      const res = await axios.get(`${API_BASE_URL}/users/me`, {
+        withCredentials: true,
+      });
 
-      const user = res.data?.data?.user;
+      const user = res.data?.data;
 
-      if (user) {
+      if (user?.name) {
         setUserName(user.name);
       }
+    } catch (error) {
+      console.log('사용자 조회 실패', error);
+    }
+  };
 
-      const medicines = res.data.data || [];
+  /*
+  ========================
+  복약 데이터 조회
+  ========================
+  */
 
-      const taken = medicines.filter((m: any) => m.taken).length;
-      const notTaken = medicines.filter((m: any) => !m.taken).length;
+  const fetchMedicationData = async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/intakes?date=${today}`, {
+        withCredentials: true,
+      });
+
+      const intakes = res.data?.data || [];
+
+      // AsyncStorage 상태 불러오기
+      const stored = await AsyncStorage.getItem('medicineStatus');
+      const savedStatus = stored ? JSON.parse(stored) : {};
+
+      let taken = 0;
+      let notTaken = 0;
+      let before = 0;
+
+      intakes.forEach((item: any) => {
+        const medicineId = item.medicineId ?? item.medicine?.id ?? item.id;
+
+        const localStatus = savedStatus[medicineId]?.status;
+
+        const status = localStatus
+          ? localStatus
+          : item.status === 'TAKEN'
+            ? 'done'
+            : item.status === 'NOT_TAKEN'
+              ? 'missed'
+              : 'before';
+
+        if (status === 'done') taken++;
+        else if (status === 'missed') notTaken++;
+        else before++;
+      });
 
       setSegments([
         {
           label: '복용 완료',
           count: taken,
-          color: '#189CEF',
+          color: '#1bef18',
           detail: '복용 완료 약',
         },
         {
           label: '미복용',
           count: notTaken,
-          color: '#0DC9BA',
+          color: '#c90d0d',
           detail: '미복용 약',
         },
         {
           label: '복용 전',
-          count: data.before,
-          color: '#D9D9D9',
+          count: before,
+          color: '#227fbd',
           detail: '복용 예정 약',
         },
       ]);
-    } catch (error) {}
+    } catch (error) {
+      console.log('복약 데이터 조회 실패', error);
+    }
   };
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchMedicationData();
+    }, []),
+  );
 
-  // ⭐ 화면 진입 시 API 호출
+  /*
+  ========================
+  화면 진입 시 실행
+  ========================
+  */
+
   useEffect(() => {
+    const user = route?.params?.user;
+
+    if (user?.name) {
+      setUserName(user.name);
+    } else {
+      fetchUser();
+    }
+
     fetchMedicationData();
-  }, []);
+  }, [route?.params]);
 
   const total = segments.reduce((sum, s) => sum + s.count, 0);
 
@@ -198,6 +235,7 @@ export default function HomeDetailPage() {
         showsVerticalScrollIndicator={false}
       >
         {/* 헤더 */}
+
         <View style={styles.header}>
           <Image
             source={require('../../assets/images/Logo.png')}
@@ -206,6 +244,7 @@ export default function HomeDetailPage() {
 
           <View style={styles.headerRight}>
             <Text style={styles.userName}>{userName}님</Text>
+
             <Text style={styles.dividerText}>|</Text>
 
             <TouchableOpacity
@@ -220,6 +259,7 @@ export default function HomeDetailPage() {
         </View>
 
         {/* 컨텐츠 */}
+
         <View style={styles.contentWrapper}>
           <View style={styles.titleSection}>
             <Text style={styles.mainTitle}>오늘 먹을 약</Text>
@@ -228,6 +268,8 @@ export default function HomeDetailPage() {
               오늘은 ‘{maxSegment.label}’가 가장 많았어요.
             </Text>
           </View>
+
+          {/* 차트 */}
 
           <View style={styles.chartCard}>
             <Text style={styles.chartLabel}>오늘 복약 달성률 기록</Text>
