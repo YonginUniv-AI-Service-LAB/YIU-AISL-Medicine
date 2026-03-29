@@ -9,6 +9,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { styles } from './FrendPopup.style';
+import { useFriend, FriendRequest } from '../../contexts/FriendContext';
 
 interface Props {
   visible: boolean;
@@ -16,10 +17,9 @@ interface Props {
   friendList: string[];
   onDelete: (email: string) => void;
   onWriteGuestBook: (email: string) => void;
-  // 🔹 추가: 친구의 캘린더를 보기 위한 함수
   onViewCalendar: (email: string) => void; 
-  isFriendView: boolean;    // 현재 친구 페이지를 보고 있는지 여부
-  onResetToMe: () => void;  // 내 페이지로 돌아가는 함수
+  isFriendView: boolean;
+  onResetToMe: () => void;
 }
 
 export default function FrendPopup({
@@ -28,19 +28,18 @@ export default function FrendPopup({
   friendList,
   onDelete,
   onWriteGuestBook,
-  onViewCalendar, // 👈 추가된 프롭 받아오기
+  onViewCalendar,
   isFriendView,
   onResetToMe,
 }: Props) {
 
-  // 하단 메인 버튼 클릭 핸들러
+  const { friendRequests, fetchFriendRequests, acceptRequest } = useFriend();
+
   const handleBottomButtonClick = () => {
     if (isFriendView) {
-      // 친구 페이지라면 내 페이지로 돌아가기 실행 후 팝업 닫기
       onResetToMe();
       onClose();
     } else {
-      // 일반 상태라면 팝업 닫기
       onClose();
     }
   };
@@ -55,12 +54,10 @@ export default function FrendPopup({
       <View style={styles.overlay}>
         <View style={styles.modalContainer}>
 
-          {/* 닫기 버튼 */}
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>
             <Text style={{ fontSize: 18, color: '#717680' }}>✕</Text>
           </TouchableOpacity>
 
-          {/* 상단 아이콘 (친구 오프 아이콘) */}
           <View style={styles.iconBox}>
             <Image
               source={require('../../assets/images/share/frend_off.png')}
@@ -69,10 +66,8 @@ export default function FrendPopup({
             />
           </View>
 
-          {/* 제목 */}
           <Text style={styles.title}>기존 친구들 목록</Text>
 
-          {/* 친구 목록 리스트 */}
           {friendList && friendList.length > 0 && (
             <ScrollView 
               style={{ width: '100%', maxHeight: 160, marginBottom: 15 }}
@@ -85,26 +80,19 @@ export default function FrendPopup({
                       <Text style={styles.friendEmail}>{email}</Text>
                     </View>
                   </View>
-
-                  {/* 액션 아이콘 그룹 */}
                   <View style={styles.actionIcons}>
-                    {/* 1. 방명록 작성 아이콘 */}
                     <TouchableOpacity onPress={() => onWriteGuestBook(email)}>
                       <Image
                         source={require('../../assets/images/share/write_off.png')}
                         style={{ width: 18, height: 18, marginRight: 12 }}
                       />
                     </TouchableOpacity>
-
-                    {/* 2. 캘린더 보기 아이콘 (수정된 부분) */}
                     <TouchableOpacity onPress={() => onViewCalendar(email)}>
                       <Image
                         source={require('../../assets/images/share/calender.png')}
                         style={{ width: 18, height: 20, marginRight: 12 }}
                       />
                     </TouchableOpacity>
-
-                    {/* 3. 삭제 버튼 */}
                     <TouchableOpacity onPress={() => onDelete(email)}>
                       <Text style={styles.deleteText}>삭제</Text>
                     </TouchableOpacity>
@@ -114,7 +102,28 @@ export default function FrendPopup({
             </ScrollView>
           )}
 
-          {/* 입력 영역 */}
+          {/* 받은 친구 요청 목록 */}
+          {friendRequests && friendRequests.length > 0 && (
+            <View style={{ width: '100%', marginBottom: 15 }}>
+              <Text style={{ fontWeight: 'bold', marginBottom: 8 }}>받은 친구 요청</Text>
+              <ScrollView style={{ maxHeight: 120 }}>
+                {friendRequests.map((req, index) => (
+                  <View key={index} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <Text>{req.fromNickname}</Text>
+                    <View style={{ flexDirection: 'row' }}>
+                      <TouchableOpacity onPress={() => acceptRequest(req.relationId, 'ACCEPTED')}>
+                        <Text style={{ color: '#0068FF', marginRight: 10 }}>수락</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={() => acceptRequest(req.relationId, 'REJECTED')}>
+                        <Text style={{ color: 'red' }}>거절</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ))}
+              </ScrollView>
+            </View>
+          )}
+
           <View style={styles.inputContainer}>
             <Text style={styles.label}>친구를 선택하세요</Text>
             <View style={styles.inputWrapper}>
@@ -131,7 +140,6 @@ export default function FrendPopup({
             </View>
           </View>
 
-          {/* 하단 메인 버튼 */}
           <TouchableOpacity
             style={styles.addButton}
             onPress={handleBottomButtonClick}

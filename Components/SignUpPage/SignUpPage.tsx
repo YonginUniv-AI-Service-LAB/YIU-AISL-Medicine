@@ -17,7 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-const API_BASE_URL = 'http://192.168.0.118:8080';
+const API_BASE_URL = 'http://192.168.219.104:8080';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // 반응형 크기 계산 유틸리티

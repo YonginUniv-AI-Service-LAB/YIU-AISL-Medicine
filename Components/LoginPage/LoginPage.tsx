@@ -25,7 +25,7 @@ function LoginPage({ navigation }: Props) {
 
     try {
       const response = await axios.post(
-        'http://192.168.0.118:8080/auth/login',
+        'http://192.168.219.104:8080/auth/login',
         {
           email: id,
           password: password,

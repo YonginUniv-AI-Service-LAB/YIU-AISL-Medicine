@@ -1,4 +1,5 @@
-import React, { useState, useCallback } from 'react';
+import { useFriend } from '../../contexts/FriendContext'; //안되면 삭제
+import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native'; // ✅ 추가
@@ -22,6 +23,7 @@ const FRIEND_ON = require('../../assets/images/share/frend_on.png');
 const FRIEND_OFF = require('../../assets/images/share/frend_off.png');
 
 export default function SharePage({ navigation }: any) {
+  const { friends, fetchFriends, friendRequests, fetchFriendRequests, removeFriend } = useFriend();
   const [isPopupVisible, setIsPopupVisible] = useState(false);
   const [isAddPopupVisible, setIsAddPopupVisible] = useState(false);
   const [isSelectPopupVisible, setIsSelectPopupVisible] = useState(false);
@@ -42,9 +44,14 @@ export default function SharePage({ navigation }: any) {
   ]);
   const [friendGuestMessages, setFriendGuestMessages] = useState<any[]>([]);
 
+  useEffect(() => {
+  fetchFriends();
+  fetchFriendRequests();
+}, []);
   // ✅ 🔥 핵심: 상세페이지 갔다 돌아오면 모든 Modal 초기화
   useFocusEffect(
     useCallback(() => {
+      fetchFriends(); //
       setIsCalendarVisible(false);
       setIsPopupVisible(false);
       setIsAddPopupVisible(false);
@@ -215,10 +222,11 @@ export default function SharePage({ navigation }: any) {
         <FrendPopup
           visible={true}
           onClose={() => setIsPopupVisible(false)}
-          friendList={friendList}
-          onDelete={(email) =>
-            setFriendList((prev) => prev.filter((e) => e !== email))
-          }
+          friendList={(friends ?? []).map(f => f.nickname)}
+          onDelete={(nickname) => {
+            const friend = friends.find(f => f.nickname === nickname); 
+            if (friend) removeFriend(friend.relationId);
+          }}
           onWriteGuestBook={handleOpenWriteGuestBook}
           onViewCalendar={handleViewCalendar}
           isFriendView={isFriendView}
