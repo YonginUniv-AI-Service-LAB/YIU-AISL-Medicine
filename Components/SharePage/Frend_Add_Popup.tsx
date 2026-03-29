@@ -1,5 +1,4 @@
-import axios from 'axios';//내가
-
+import axios from 'axios';
 import React, { useState } from 'react';
 import {
   View,
@@ -36,7 +35,7 @@ export default function FrendAddPopup({ visible, onClose, onConfirm }: Props) {
     onClose();
   };
   
-const handleSubmit = async () => { //내가
+const handleSubmit = async () => {
   if (!isButtonEnabled) return;
   try {
     await axios.post('http://192.168.219.104:8080/friends', { email }, { withCredentials: true });

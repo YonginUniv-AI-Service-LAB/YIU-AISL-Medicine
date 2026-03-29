@@ -148,7 +148,6 @@ export default function FrendPopup({
               {isFriendView ? "내 페이지로 돌아가기" : "공유할 대상을 선택하세요"}
             </Text>
           </TouchableOpacity>
-
         </View>
       </View>
     </Modal>

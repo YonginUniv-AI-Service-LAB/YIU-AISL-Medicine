@@ -1,4 +1,4 @@
-import { useFriend } from '../../contexts/FriendContext'; //안되면 삭제
+import { useFriend } from '../../contexts/FriendContext';
 import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
