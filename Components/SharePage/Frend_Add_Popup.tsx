@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { API_BASE_URL } from '../../constants/api';
 import React, { useState } from 'react';
 import {
   View,
@@ -38,7 +39,7 @@ export default function FrendAddPopup({ visible, onClose, onConfirm }: Props) {
 const handleSubmit = async () => {
   if (!isButtonEnabled) return;
   try {
-    await axios.post('http://192.168.219.104:8080/friends', { email }, { withCredentials: true });
+    await axios.post(`${API_BASE_URL}/friends`, { email }, { withCredentials: true });
     alert("친구 신청을 보냈습니다!");
     setIsSent(true);
   } catch (error) {

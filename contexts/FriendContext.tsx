@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../constants/api';
 
 axios.defaults.withCredentials = true;
 
-const API_BASE_URL = 'http://192.168.219.104:8080';
+
 
 export interface Friend {
   relationId: number;

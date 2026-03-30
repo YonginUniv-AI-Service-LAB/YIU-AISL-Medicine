@@ -8,6 +8,7 @@ import {
   Alert,
 } from 'react-native';
 import axios from 'axios';
+import { API_BASE_URL } from '../../constants/api';
 import styles from './LoginPage.style';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
@@ -25,7 +26,7 @@ function LoginPage({ navigation }: Props) {
 
     try {
       const response = await axios.post(
-        'http://192.168.219.104:8080/auth/login',
+        `${API_BASE_URL}/auth/login`,
         {
           email: id,
           password: password,

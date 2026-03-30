@@ -13,11 +13,12 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Circle, G } from 'react-native-svg';
 import axios from 'axios';
+import { API_BASE_URL } from '../../constants/api';
 import { styles } from './HomePageDetail.styles';
 import MenuPopup from './MenuPopup';
 import SituationPopup from './SituationPopup';
 
-const API_BASE_URL = 'http://192.168.0.118:8080';
+
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const wp = (size: number) => (size / 393) * SCREEN_WIDTH;

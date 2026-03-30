@@ -15,8 +15,9 @@ import { MedicineProvider } from './contexts/MedicineContext';
 import { View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import axios from 'axios';
+import { API_BASE_URL } from './constants/api';
 
-axios.defaults.baseURL = 'http://192.168.219.104:8080';
+axios.defaults.baseURL = API_BASE_URL;
 axios.defaults.withCredentials = true;
 axios.defaults.timeout = 20000;
 
