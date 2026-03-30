@@ -67,7 +67,7 @@ export default function SituationPopup({
 
         navigation.reset({
           index: 0,
-          routes: [{ name: 'LoginPage' }],
+          routes: [{ name: 'Auth' }],
         });
       }
 
@@ -75,7 +75,9 @@ export default function SituationPopup({
       if (type === 'reset') {
         onClose();
 
-        navigation.navigate('ResetpasswordPage');
+        navigation.navigate('Auth', {
+          screen: 'ResetpasswordPage',
+        });
       }
 
       // 회원탈퇴
@@ -88,7 +90,7 @@ export default function SituationPopup({
 
         navigation.reset({
           index: 0,
-          routes: [{ name: 'LoginPage' }],
+          routes: [{ name: 'Auth' }],
         });
       }
     } catch (error) {

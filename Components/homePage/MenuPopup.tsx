@@ -54,25 +54,13 @@ export default function MenuPopup({
   if (!visible) return null;
 
   // ⭐ 로그아웃 API
-  const handleLogout = async () => {
-    try {
-      await axios.post(`${API_BASE_URL}/auth/logout`);
-      onSelect('logout');
-    } catch (error) {
-      console.log(error);
-      Alert.alert('로그아웃 실패');
-    }
+  const handleLogout = () => {
+    onSelect('logout');
   };
 
   // ⭐ 회원탈퇴 API
-  const handleWithdraw = async () => {
-    try {
-      await axios.delete(`${API_BASE_URL}/auth/user`);
-      onSelect('withdraw');
-    } catch (error) {
-      console.log(error);
-      Alert.alert('회원 탈퇴 실패');
-    }
+  const handleWithdraw = () => {
+    onSelect('withdraw');
   };
 
   return (

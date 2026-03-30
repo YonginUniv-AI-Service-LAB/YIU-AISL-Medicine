@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useRoute } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -219,12 +220,17 @@ export default function HomeDetailPage() {
     return data;
   });
 
+  const navigation = useNavigation<any>();
+
   const handleMenuSelect = (type: 'logout' | 'reset' | 'withdraw') => {
     setPopupType(type);
-    setIsMenuPopupVisible(false);
 
+    // ⭐ 먼저 팝업 띄우고
+    setIsSituationVisible(true);
+
+    // ⭐ 그 다음 메뉴 닫기 (지연)
     setTimeout(() => {
-      setIsSituationVisible(true);
+      setIsMenuPopupVisible(false);
     }, 100);
   };
 
