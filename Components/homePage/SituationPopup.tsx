@@ -11,9 +11,10 @@ import {
   Alert,
 } from 'react-native';
 import axios from 'axios';
+import { API_BASE_URL } from '../../constants/api';
 import { useNavigation } from '@react-navigation/native';
 
-const API_BASE_URL = 'http://192.168.0.118:8080';
+
 
 // axios 기본 설정
 axios.defaults.withCredentials = true;

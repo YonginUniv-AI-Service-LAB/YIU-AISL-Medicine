@@ -1,3 +1,4 @@
+import { FriendProvider } from './contexts/FriendContext';
 import React, { useEffect, useCallback } from 'react';
 import * as SplashScreen from 'expo-splash-screen';
 import {
@@ -14,8 +15,9 @@ import { MedicineProvider } from './contexts/MedicineContext';
 import { View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import axios from 'axios';
+import { API_BASE_URL } from './constants/api';
 
-axios.defaults.baseURL = 'http://192.168.0.15:8080';
+axios.defaults.baseURL = API_BASE_URL;
 axios.defaults.withCredentials = true;
 axios.defaults.timeout = 20000;
 
@@ -40,6 +42,7 @@ export default function App() {
   if (!fontsLoaded) return null;
 
   return (
+  <FriendProvider>
     <MedicineProvider>
       <ScheduleProvider>
         <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
@@ -47,5 +50,6 @@ export default function App() {
         </View>
       </ScheduleProvider>
     </MedicineProvider>
+  </FriendProvider>
   );
 }

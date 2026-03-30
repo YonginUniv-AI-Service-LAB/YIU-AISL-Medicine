@@ -13,13 +13,14 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { useRoute } from '@react-navigation/native';
 import axios from 'axios';
+import { API_BASE_URL } from '../../constants/api';
 
 import styles from './AddSchedule.style';
 import { DAYS, HOURS } from './calendarData';
 import { useSchedule } from '../../contexts/ScheduleContext';
 import { useMedicine } from '../../contexts/MedicineContext';
 
-const API_BASE_URL = 'http://192.168.0.118:8080';
+
 
 const numbers = Array.from({ length: 12 }, (_, i) => i + 1);
 const doseCountNumbers = [1, 2, 3];

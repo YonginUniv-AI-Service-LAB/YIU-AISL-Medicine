@@ -11,10 +11,11 @@ import {
   Alert,
 } from 'react-native';
 import axios from 'axios';
+import { API_BASE_URL } from '../../constants/api';
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
-const API_BASE_URL = 'http://192.168.0.118:8080';
+
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 

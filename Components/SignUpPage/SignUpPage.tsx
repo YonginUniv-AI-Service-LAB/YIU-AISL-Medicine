@@ -1,6 +1,7 @@
 //반응형 유틸리티(wp, hp)**와 **중앙 정렬 레이아웃(contentWrapper)**이 아주 잘 구현
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../../constants/api';
 import {
   View,
   Text,
@@ -17,7 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-const API_BASE_URL = 'http://192.168.0.118:8080';
+
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // 반응형 크기 계산 유틸리티
@@ -34,32 +35,32 @@ const agreeList: {
   required: boolean;
   detail: boolean;
 }[] = [
-  {
-    key: 'age',
-    label: '[필수] 만14세 이상입니다',
-    required: true,
-    detail: false,
-  },
-  { key: 'tos', label: '[필수] 서비스 이용약관', required: true, detail: true },
-  {
-    key: 'privacy',
-    label: '[필수] 개인정보 수집 및 이용 동의',
-    required: true,
-    detail: true,
-  },
-  {
-    key: 'mkt',
-    label: '[선택] 마케팅 목적의 개인정보 수집 및 이용',
-    required: false,
-    detail: true,
-  },
-  {
-    key: 'sms',
-    label: '[선택] 마케팅 정보 수신 동의(SMS)',
-    required: false,
-    detail: true,
-  },
-];
+    {
+      key: 'age',
+      label: '[필수] 만14세 이상입니다',
+      required: true,
+      detail: false,
+    },
+    { key: 'tos', label: '[필수] 서비스 이용약관', required: true, detail: true },
+    {
+      key: 'privacy',
+      label: '[필수] 개인정보 수집 및 이용 동의',
+      required: true,
+      detail: true,
+    },
+    {
+      key: 'mkt',
+      label: '[선택] 마케팅 목적의 개인정보 수집 및 이용',
+      required: false,
+      detail: true,
+    },
+    {
+      key: 'sms',
+      label: '[선택] 마케팅 정보 수신 동의(SMS)',
+      required: false,
+      detail: true,
+    },
+  ];
 
 export default function SignUpScreen() {
   // Navigation.tsx의 Stack.Screen name="LoginPage"와 일치시켜야 함
@@ -390,7 +391,7 @@ export default function SignUpScreen() {
             style={[
               styles.fullInput,
               pwCheck.length > 0 &&
-                pw !== pwCheck && { borderColor: '#F84545' },
+              pw !== pwCheck && { borderColor: '#F84545' },
             ]}
             placeholder="비밀번호 재입력"
             placeholderTextColor="#D9D9D9"

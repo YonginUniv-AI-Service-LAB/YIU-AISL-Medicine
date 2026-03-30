@@ -20,8 +20,9 @@ import { MedicineSchedule } from '../../contexts/MedicineContext';
 import { useSchedule } from '../../contexts/ScheduleContext';
 
 import axios from 'axios';
+import { API_BASE_URL } from '../../constants/api';
 
-const API_BASE_URL = 'http://192.168.0.118:8080';
+
 
 const MedicinePage: React.FC = () => {
   const navigation = useNavigation<any>();

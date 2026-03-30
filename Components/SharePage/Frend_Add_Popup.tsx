@@ -1,3 +1,5 @@
+import axios from 'axios';
+import { API_BASE_URL } from '../../constants/api';
 import React, { useState } from 'react';
 import {
   View,
@@ -33,12 +35,18 @@ export default function FrendAddPopup({ visible, onClose, onConfirm }: Props) {
     setEmail('');
     onClose();
   };
-
-  const handleSubmit = () => {
-    if (!isButtonEnabled) return;
-    // 실제 환경에선 여기서 서버로 신청 메일을 보냄
-    setIsSent(true); 
-  };
+  
+const handleSubmit = async () => {
+  if (!isButtonEnabled) return;
+  try {
+    await axios.post(`${API_BASE_URL}/friends`, { email }, { withCredentials: true });
+    alert("친구 신청을 보냈습니다!");
+    setIsSent(true);
+  } catch (error) {
+    console.log('친구 신청 오류:', error);
+    alert("신청 실패");
+  }
+};
 
   return (
     <Modal
