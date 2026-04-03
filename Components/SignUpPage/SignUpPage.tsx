@@ -222,9 +222,9 @@ export default function SignUpScreen() {
 
   // 타이머 이펙트
   useEffect(() => {
-    if (timerSec > 0) {
+    if (timerSec > 0 && !certNumValid) {
       timerRef.current = setInterval(() => setTimerSec((t) => t - 1), 1000);
-    } else if (timerSec === 0 && emailSent) {
+    } else if (timerSec === 0 && emailSent && !certNumValid) {
       Alert.alert('알림', '인증시간이 만료되었습니다. 다시 인증해주세요.');
       setEmailSent(false);
       setCertNum('');
@@ -238,7 +238,7 @@ export default function SignUpScreen() {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [timerSec]);
+  }, [timerSec, certNumValid, emailSent]);
 
   const isFormValid =
     certNumValid &&
