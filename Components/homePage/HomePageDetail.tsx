@@ -142,7 +142,7 @@ export default function HomeDetailPage() {
           ? localStatus
           : item.status === 'TAKEN'
             ? 'done'
-            : item.status === 'NOT_TAKEN'
+            : (item.status === 'MISSED' || item.status === 'NOT_TAKEN')
               ? 'missed'
               : 'before';
 

@@ -2,8 +2,8 @@
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "strict": true,
-
-    // ⭐ 핵심: 타입 폴더 인식
+    "lib": ["es2017", "dom", "dom.iterable", "esnext"],
+    "jsx": "react-native",
     "baseUrl": ".",
 
     // ⭐ alias 유지
