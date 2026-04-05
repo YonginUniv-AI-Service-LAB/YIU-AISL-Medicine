@@ -76,7 +76,7 @@ export default function PasswordResetScreen({ navigation }: Props) {
         Alert.alert('성공', '본인인증이 완료되었습니다.');
 
         setIsCodeConfirmed(true);
-        setTimer(-1);
+        setTimer(0);
       } catch {
         Alert.alert('오류', '인증번호가 틀렸습니다.');
       }
@@ -122,16 +122,16 @@ export default function PasswordResetScreen({ navigation }: Props) {
   useEffect(() => {
     let iv: NodeJS.Timeout;
 
-    if (timer > 0) {
+    if (timer > 0 && !isCodeConfirmed) {
       iv = setInterval(() => setTimer((t) => t - 1), 1000);
-    } else if (timer === 0) {
+    } else if (timer === 0 && emailSent && !isCodeConfirmed) {
       Alert.alert('알림', '시간이 만료되었습니다. 다시 인증해주세요.');
       setEmailSent(false);
       setTimer(-1);
     }
 
     return () => clearInterval(iv);
-  }, [timer]);
+  }, [timer, isCodeConfirmed, emailSent]);
 
   const formatTime = (s: number) => {
     const m = Math.floor(s / 60);

@@ -34,9 +34,10 @@ function LoginPage({ navigation }: Props) {
         { withCredentials: true },
       );
 
-      console.log(response.data);
+      console.log('[로그인 성공]', response.data);
 
-      const user = response.data.data.user;
+      // API 명세: 응답 { user: { id, name, email } }
+      const user = response.data.user;
 
       navigation.reset({
         index: 0,
@@ -47,9 +48,18 @@ function LoginPage({ navigation }: Props) {
           },
         ],
       });
-    } catch (error) {
-      console.log(error);
-      Alert.alert('로그인 실패', '아이디 또는 비밀번호를 확인하세요.');
+    } catch (error: any) {
+      console.log('[로그인 오류]', error.response?.data);
+
+      // API 명세 예외 처리: 404 이메일 없음, 401 비밀번호 불일치
+      const status = error.response?.status;
+      if (status === 404) {
+        Alert.alert('로그인 실패', '등록되지 않은 이메일입니다.');
+      } else if (status === 401) {
+        Alert.alert('로그인 실패', '비밀번호가 올바르지 않습니다.');
+      } else {
+        Alert.alert('로그인 실패', '아이디 또는 비밀번호를 확인하세요.');
+      }
     }
   };
 
