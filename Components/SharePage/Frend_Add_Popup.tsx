@@ -18,35 +18,42 @@ import { styles } from './Frend_Add_Popup.style';
 interface Props {
   visible: boolean;
   onClose: () => void;
-  // 🔹 확인 버튼 클릭 시 성준님이 입력한 이메일을 부모(SharePage 등)에게 전달
-  onConfirm?: (email: string) => void; 
+  onConfirm?: (email: string) => void;
 }
 
 export default function FrendAddPopup({ visible, onClose, onConfirm }: Props) {
   const [email, setEmail] = useState('');
-  const [isSent, setIsSent] = useState(false); // 전송 완료 상태
+  const [isSent, setIsSent] = useState(false);
 
   const isValidEmail = (value: string) => /\S+@\S+\.\S+/.test(value);
   const isButtonEnabled = isValidEmail(email);
 
-  // 팝업 닫기 및 초기화
   const handleClose = () => {
     setIsSent(false);
     setEmail('');
     onClose();
   };
-  
-const handleSubmit = async () => {
-  if (!isButtonEnabled) return;
-  try {
-    await axios.post(`${API_BASE_URL}/friends`, { email }, { withCredentials: true });
-    alert("친구 신청을 보냈습니다!");
-    setIsSent(true);
-  } catch (error) {
-    console.log('친구 신청 오류:', error);
-    alert("신청 실패");
-  }
-};
+
+  const handleSubmit = async () => {
+    if (!isButtonEnabled) return;
+    try {
+      const res = await axios.post(
+        `${API_BASE_URL}/friends`,
+        { email },
+        { withCredentials: true },
+      );
+      console.log('✅ 친구 신청 성공:', res.data);
+      alert('친구 신청을 보냈습니다!');
+      setIsSent(true);
+    } catch (error: any) {
+      // 🔥 정확한 에러 확인용
+      console.log('❌ 상태코드:', error.response?.status);
+      console.log('❌ 에러 내용:', error.response?.data);
+      console.log('❌ 요청 URL:', error.config?.url);
+      console.log('❌ 요청 데이터:', error.config?.data);
+      alert(`신청 실패 (${error.response?.status}): ${JSON.stringify(error.response?.data)}`);
+    }
+  };
 
   return (
     <Modal
@@ -62,13 +69,11 @@ const handleSubmit = async () => {
             style={{ width: '100%', alignItems: 'center' }}
           >
             <View style={styles.modalContainer}>
-              {/* 우측 상단 닫기 X 버튼 */}
               <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
                 <Text style={{ fontSize: 20, color: '#717680' }}>✕</Text>
               </TouchableOpacity>
 
               {!isSent ? (
-                /* --- [상태 1] 입력 화면 (성준님이 이메일 타이핑) --- */
                 <View style={{ width: '100%' }}>
                   <View style={styles.iconBox}>
                     <Image
@@ -82,7 +87,6 @@ const handleSubmit = async () => {
 
                   <View style={styles.inputContainer}>
                     <Text style={styles.label}>친구 추가</Text>
-                    {/* 🔹 ERROR 해결: div를 View로 교체 완료 */}
                     <View style={styles.inputWrapper}>
                       <Image
                         source={require('../../assets/images/share/mail.png')}
@@ -105,7 +109,7 @@ const handleSubmit = async () => {
                   <TouchableOpacity
                     style={[
                       styles.addButton,
-                      { backgroundColor: isButtonEnabled ? '#0068FF' : '#D9D9D9' }
+                      { backgroundColor: isButtonEnabled ? '#0068FF' : '#D9D9D9' },
                     ]}
                     disabled={!isButtonEnabled}
                     onPress={handleSubmit}
@@ -114,20 +118,18 @@ const handleSubmit = async () => {
                   </TouchableOpacity>
                 </View>
               ) : (
-                /* --- [상태 2] 전송 완료 화면 --- */
                 <View style={styles.successContainer}>
                   <View style={styles.successContent}>
                     <Text style={styles.successMessage}>
-                      {`‘${email}’님께\n친구 신청했습니다.`}
+                      {`'${email}'님께\n친구 신청했습니다.`}
                     </Text>
                   </View>
 
                   <View style={styles.modalActions}>
-                    <TouchableOpacity 
-                      style={styles.confirmButton} 
+                    <TouchableOpacity
+                      style={styles.confirmButton}
                       onPress={() => {
-                        // 🔹 확인 클릭 시: 입력한 이메일을 인자로 넘겨주며 부모의 콜백 실행
-                        if (onConfirm) onConfirm(email); 
+                        if (onConfirm) onConfirm(email);
                         handleClose();
                       }}
                     >
