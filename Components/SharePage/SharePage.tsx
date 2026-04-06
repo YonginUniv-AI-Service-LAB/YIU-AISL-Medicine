@@ -45,9 +45,9 @@ export default function SharePage({ navigation }: any) {
   const [friendGuestMessages, setFriendGuestMessages] = useState<any[]>([]);
 
   useEffect(() => {
-  fetchFriends();
-  fetchFriendRequests();
-}, []);
+    fetchFriends();
+    fetchFriendRequests();
+  }, []);
   // ✅ 🔥 핵심: 상세페이지 갔다 돌아오면 모든 Modal 초기화
   useFocusEffect(
     useCallback(() => {
@@ -224,7 +224,7 @@ export default function SharePage({ navigation }: any) {
           onClose={() => setIsPopupVisible(false)}
           friendList={(friends ?? []).map(f => f.nickname)}
           onDelete={(nickname) => {
-            const friend = friends.find(f => f.nickname === nickname); 
+            const friend = friends.find(f => f.nickname === nickname);
             if (friend) removeFriend(friend.relationId);
           }}
           onWriteGuestBook={handleOpenWriteGuestBook}

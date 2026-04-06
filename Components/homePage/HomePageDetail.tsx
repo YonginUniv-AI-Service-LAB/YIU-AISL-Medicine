@@ -142,7 +142,7 @@ export default function HomeDetailPage() {
           ? localStatus
           : item.status === 'TAKEN'
             ? 'done'
-            : (item.status === 'MISSED' || item.status === 'NOT_TAKEN')
+            : item.status === 'NOT_TAKEN'
               ? 'missed'
               : 'before';
 
@@ -319,8 +319,8 @@ export default function HomeDetailPage() {
                     {total === 0
                       ? 0
                       : ((segments[selectedIndex].count / total) * 100).toFixed(
-                          0,
-                        )}
+                        0,
+                      )}
                     %
                   </Text>
                 </Text>

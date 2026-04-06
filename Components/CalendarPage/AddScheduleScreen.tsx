@@ -142,17 +142,17 @@ const AddScheduleScreen: React.FC = () => {
   const [doseDays, setDoseDays] = useState<string[]>(
     editData?.days
       ? editData.days.map((d: string) => {
-          const map: any = {
-            월: '월요일',
-            화: '화요일',
-            수: '수요일',
-            목: '목요일',
-            금: '금요일',
-            토: '토요일',
-            일: '일요일',
-          };
-          return map[d];
-        })
+        const map: any = {
+          월: '월요일',
+          화: '화요일',
+          수: '수요일',
+          목: '목요일',
+          금: '금요일',
+          토: '토요일',
+          일: '일요일',
+        };
+        return map[d];
+      })
       : [],
   );
   const [dosePeriod, setDosePeriod] = useState<number | null>(

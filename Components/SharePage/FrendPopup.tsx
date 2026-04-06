@@ -17,7 +17,7 @@ interface Props {
   friendList: string[];
   onDelete: (email: string) => void;
   onWriteGuestBook: (email: string) => void;
-  onViewCalendar: (email: string) => void; 
+  onViewCalendar: (email: string) => void;
   isFriendView: boolean;
   onResetToMe: () => void;
 }
@@ -69,7 +69,7 @@ export default function FrendPopup({
           <Text style={styles.title}>기존 친구들 목록</Text>
 
           {friendList && friendList.length > 0 && (
-            <ScrollView 
+            <ScrollView
               style={{ width: '100%', maxHeight: 160, marginBottom: 15 }}
               showsVerticalScrollIndicator={false}
             >

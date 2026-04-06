@@ -33,29 +33,29 @@ const FriendContext = createContext<FriendContextType | null>(null);
 
 export const FriendProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [friends, setFriends] = useState<Friend[]>([]);
-  const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]); 
+  const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
 
-const fetchFriends = async () => {
-  try {
-    console.log('fetchFriends 호출됨');
-    const res = await axios.get(`${API_BASE_URL}/friends`);
-    console.log('친구 데이터:', res.data);
-    setFriends(res.data.data);
-  } catch (error) {
-    console.error("친구 목록 조회 실패:", error);
-  }
-};
+  const fetchFriends = async () => {
+    try {
+      console.log('fetchFriends 호출됨');
+      const res = await axios.get(`${API_BASE_URL}/friends`);
+      console.log('친구 데이터:', res.data);
+      setFriends(res.data.data);
+    } catch (error) {
+      console.error("친구 목록 조회 실패:", error);
+    }
+  };
 
-const fetchFriendRequests = async () => {
-  try {
-    console.log('fetchFriendRequests 호출됨');
-    const res = await axios.get(`${API_BASE_URL}/friends/requests/received`);
-    console.log('요청 데이터:', res.data);
-    setFriendRequests(res.data.data);
-  } catch (error) {
-    console.error("친구 요청 목록 조회 실패:", error);
-  }
-};
+  const fetchFriendRequests = async () => {
+    try {
+      console.log('fetchFriendRequests 호출됨');
+      const res = await axios.get(`${API_BASE_URL}/friends/requests/received`);
+      console.log('요청 데이터:', res.data);
+      setFriendRequests(res.data.data);
+    } catch (error) {
+      console.error("친구 요청 목록 조회 실패:", error);
+    }
+  };
 
   const sendFriendRequest = async (email: string) => {
     try {
@@ -66,16 +66,16 @@ const fetchFriendRequests = async () => {
     }
   };
 
-const acceptRequest = async (friendId: number, status: 'ACCEPTED' | 'REJECTED') => {
-  try {
-    console.log('처리 friendId:', friendId, 'status:', status);
-    await axios.patch(`${API_BASE_URL}/friends/${friendId}`, { status });
-    fetchFriends();
-    fetchFriendRequests();
-  } catch (error: any) {
-    console.error("처리 실패:", error);
-  }
-};
+  const acceptRequest = async (friendId: number, status: 'ACCEPTED' | 'REJECTED') => {
+    try {
+      console.log('처리 friendId:', friendId, 'status:', status);
+      await axios.patch(`${API_BASE_URL}/friends/${friendId}`, { status });
+      fetchFriends();
+      fetchFriendRequests();
+    } catch (error: any) {
+      console.error("처리 실패:", error);
+    }
+  };
 
   const removeFriend = async (friendId: number) => {
     try {

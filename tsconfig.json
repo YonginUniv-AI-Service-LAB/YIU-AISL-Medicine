@@ -1,20 +1,19 @@
 {
-  "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "strict": true,
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "node",
     "lib": ["es2017", "dom", "dom.iterable", "esnext"],
     "jsx": "react-native",
+    "strict": true,
     "baseUrl": ".",
-
-    // ⭐ alias 유지
     "paths": {
       "@/*": ["./*"]
     },
-
-    // ⭐ 타입 오류 방지
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "downlevelIteration": true
   },
   "include": ["**/*.ts", "**/*.tsx"]
 }

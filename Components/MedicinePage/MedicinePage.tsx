@@ -101,12 +101,12 @@ const MedicinePage: React.FC = () => {
   };
 
   const updateLocalStatus = (
-    intakeId: number, // intakeId 타입 지정
+    medicineId: number, // medicineId 타입 지정
     status: 'done' | 'before' | 'missed', // status 타입 지정
   ) => {
     setApiMedicines((prev) =>
       prev.map((m) => {
-        if (m.intakeId !== intakeId) return m;
+        if (m.id !== medicineId) return m;
 
         let newQuantity = m.totalQuantity;
 
@@ -124,8 +124,8 @@ const MedicinePage: React.FC = () => {
   };
 
   const updateStatusApi = async (
-    intakeId: number,
-    status: 'done' | 'before' | 'missed',
+    medicineId: number, // medicineId 타입 지정
+    status: 'done' | 'before' | 'missed', // status 타입 지정
   ) => {
     const statusMap: { [key: string]: string } = {
       done: 'TAKEN',
@@ -133,33 +133,22 @@ const MedicinePage: React.FC = () => {
       missed: 'MISSED',
     };
 
-    const targetStatus = statusMap[status];
-
     try {
-      console.log(`[API 요청] 상태 변경 시도: intakeId=${intakeId}, status=${targetStatus}`);
-      
       const response = await axios.patch(
-        `${API_BASE_URL}/intakes/${intakeId}`,
+        `${API_BASE_URL}/intakes/${medicineId}`,
         {
-          status: targetStatus,
+          status: statusMap[status],
         },
         {
           withCredentials: true,
-          headers: {
-            'Content-Type': 'application/json',
-          },
         },
       );
 
-      if (response.status === 200 || response.status === 204) {
-        console.log('[API 성공] 상태 변경 완료:', intakeId, targetStatus);
+      if (response.status === 200) {
+        console.log('상태 변경 요청 성공', medicineId, statusMap[status]);
       }
-    } catch (error: any) {
-      if (error.response) {
-        console.log('[API 에러] 서버 응답:', error.response.status, error.response.data);
-      } else {
-        console.log('[API 에러] 요청 실패:', error.message);
-      }
+    } catch (error) {
+      console.log('복용 상태 변경 실패', error);
     }
   };
 
@@ -200,49 +189,45 @@ const MedicinePage: React.FC = () => {
     }
   };
 
-  const fetchMedicines = async () => {
-    try {
-      const res = await axios.get(`${API_BASE_URL}/intakes?date=${selectedDateString}`, {
-        withCredentials: true,
-      });
-
-      console.log('서버에서 받은 약 목록 (intakes)', res.data);
-
-      const data = res.data?.data ?? res.data;
-
-      // intakes 데이터를 프론트엔드 형식에 맞춰 변환
-      const converted = data.map((item: any) => {
-        const medicine = item.medicine || {};
-        let status = 'before';
-
-        if (item.status === 'TAKEN') status = 'done';
-        else if (item.status === 'MISS' || item.status === 'MISSED' || item.status === 'NOT_TAKEN') status = 'missed';
-        else if (item.status === 'PENDING') status = 'before';
-
-        return {
-          ...medicine, // 약 정보
-          intakeId: item.id, // 복용 기록 고유 ID
-          intakeTime: item.intakeTime || medicine.intakeTime, // 복용 시간
-          status, // 복용 상태
-          totalQuantity: medicine.totalQuantity,
-        };
-      });
-
-      // 동일한 약인 경우 그룹화 로직 (필요 시)
-      const grouped = groupMedicines(converted);
-
-      const withLocalStatus = await applySavedStatus(grouped);
-      setApiMedicines(withLocalStatus);
-    } catch (error) {
-      console.log('약 목록 불러오기 실패', error);
-    }
-  };
-
   useFocusEffect(
     useCallback(() => {
       fetchUser();
+
+      const fetchMedicines = async () => {
+        try {
+          const res = await axios.get(`${API_BASE_URL}/medicines`, {
+            withCredentials: true,
+          });
+
+          console.log('서버에서 받은 약 목록', res.data);
+
+          const data = res.data?.data ?? res.data;
+
+          // 서버 status → 프론트 status 변환
+          const converted = data.map((m: any) => {
+            let status = 'before';
+
+            if (m.status === 'TAKEN') status = 'done';
+            if (m.status === 'MISSED') status = 'missed';
+            if (m.status === 'PENDING') status = 'before';
+
+            return {
+              ...m,
+              status,
+            };
+          });
+
+          const grouped = groupMedicines(converted);
+
+          const withLocalStatus = await applySavedStatus(grouped);
+          setApiMedicines(withLocalStatus);
+        } catch (error) {
+          console.log('약 목록 불러오기 실패', error);
+        }
+      };
+
       fetchMedicines();
-    }, [baseDate]),
+    }, []),
   );
 
   const groupMedicines = (data: any[]) => {
@@ -429,7 +414,7 @@ const MedicinePage: React.FC = () => {
 
                     <TouchableOpacity
                       onPress={() => {
-                        const intakeId = item.intakeId;
+                        const intakeId = item.schedules?.[0]?.id;
 
                         setSelectedMedicineId(intakeId);
                         setSelectedStatus(item.status ?? 'before');
@@ -519,12 +504,12 @@ const MedicinePage: React.FC = () => {
                       • 복용 간격 :
                       {item.schedules?.length
                         ? [
-                            ...new Set(
-                              item.schedules.map(
-                                (s: any) => dayMap[s.dayOfWeek],
-                              ),
+                          ...new Set(
+                            item.schedules.map(
+                              (s: any) => dayMap[s.dayOfWeek],
                             ),
-                          ].join(', ')
+                          ),
+                        ].join(', ')
                         : '-'}
                     </Text>
 
@@ -612,17 +597,17 @@ const MedicinePage: React.FC = () => {
                     if (selectedMedicineId) {
                       const intakeId = Number(selectedMedicineId);
 
-                      const medicineItem = apiMedicines.find((m) =>
-                        m.intakeId === intakeId
+                      const medicine = apiMedicines.find((m) =>
+                        m.schedules?.some((s: any) => s.id === intakeId),
                       );
                       const newQuantity =
                         selectedStatus === 'done'
-                          ? Math.max((medicineItem?.totalQuantity ?? 0) - 1, 0)
-                          : (medicineItem?.totalQuantity ?? 0);
+                          ? Math.max((medicine?.totalQuantity ?? 0) - 1, 0)
+                          : (medicine?.totalQuantity ?? 0);
 
-                      const medicineId = medicineItem?.id;
+                      const medicineId = medicine?.id;
 
-                      updateLocalStatus(intakeId, selectedStatus);
+                      updateLocalStatus(medicineId, selectedStatus);
 
                       saveStatusLocal(medicineId, selectedStatus, newQuantity);
 
