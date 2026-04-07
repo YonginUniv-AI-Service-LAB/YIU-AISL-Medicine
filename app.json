@@ -1,0 +1,26 @@
+{
+  "expo": {
+    "name": "Medicine-app",
+    "slug": "Medicine-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "medicineapp",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {},
+    "plugins": [
+      "expo-font"
+    ],
+    "experiments": {
+      "typedRoutes": false,
+      "reactCompiler": false
+    }
+  }
+}
