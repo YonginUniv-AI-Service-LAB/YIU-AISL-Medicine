@@ -241,7 +241,7 @@ export default function SharePage() {
           friendList={(friends ?? []).map(f => f.nickname)}
           onDelete={(nickname) => {
             const friend = friends.find(f => f.nickname === nickname);
-            if (friend) removeFriend(friend.relationId);
+            if (friend) removeFriend(friend.friendId);
           }}
           onWriteGuestBook={handleOpenWriteGuestBook}
           onViewCalendar={handleViewCalendar}

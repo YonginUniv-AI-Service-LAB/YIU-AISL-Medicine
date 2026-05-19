@@ -3,7 +3,7 @@ import axios from 'axios';
 import { API_BASE_URL } from '../constants/api';
 
 export interface Friend {
-  relationId: number;
+  relationId?: number;
   friendId: number;
   nickname: string;
   profileImageUrl: string;
@@ -122,7 +122,7 @@ export const FriendProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const postGuestbook = async (userId: number, message: string): Promise<void> => {
     await axios.post(
       `${API_BASE_URL}/users/${userId}/guestbook`,
-      { message },
+      { content: message },
       { withCredentials: true },
     );
   };
