@@ -9,10 +9,12 @@ import {
   Modal,
   Keyboard,
   Pressable,
+  Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useRoute } from '@react-navigation/native';
 import axios from 'axios';
+import { addLocalMedicine } from './localMedicineStore';
 import { API_BASE_URL } from '../../constants/api';
 
 import styles from './AddSchedule.style';
@@ -96,7 +98,17 @@ const AddScheduleScreen: React.FC = () => {
           parseInt(s.intakeTime.split(':')[0], 10),
         );
 
-        const days = editData.schedules.map((s: any) => s.dayOfWeek);
+        const dayNumToName: Record<number, string> = {
+          1: '월요일', 2: '화요일', 3: '수요일', 4: '목요일',
+          5: '금요일', 6: '토요일', 7: '일요일',
+        };
+        const days = [
+          ...new Set(
+            editData.schedules
+              .map((s: any) => dayNumToName[s.dayOfWeek])
+              .filter(Boolean),
+          ),
+        ];
 
         setDoseHours(hours);
         setDoseDays(days);
@@ -230,16 +242,20 @@ const AddScheduleScreen: React.FC = () => {
     setModalVisible(false);
   };
   const saveSchedule = async () => {
-    const medicineId = isEdit ? editData.id : Date.now().toString();
+    if (!medicineName.trim()) {
+      Alert.alert('입력 오류', '약 이름을 입력해주세요.');
+      return;
+    }
 
-    const today =
-      new Date().getFullYear() +
-      '-' +
-      String(new Date().getMonth() + 1).padStart(2, '0') +
-      '-' +
-      String(new Date().getDate()).padStart(2, '0');
+    if (doseHours.length === 0 || doseDays.length === 0) {
+      Alert.alert('입력 오류', '복용 버튼을 눌러 복용 시간과 요일을 선택해주세요.');
+      return;
+    }
 
-    const times = doseHours.map((h) => `${String(h).padStart(2, '0')}:00`);
+    const times = doseHours.map((h) => {
+      const hour = h === 24 ? 0 : h;
+      return `${String(hour).padStart(2, '0')}:00:00`;
+    });
     const days = doseDays?.map((d) => d[0]) ?? [];
 
     const count =
@@ -253,7 +269,6 @@ const AddScheduleScreen: React.FC = () => {
     const remain =
       remainCount ?? (remainInput ? Number(remainInput) : undefined);
 
-    /* ⭐ schedules 생성 (백엔드 DTO용) */
     const dayMap: any = {
       월: 1,
       화: 2,
@@ -285,34 +300,59 @@ const AddScheduleScreen: React.FC = () => {
       schedules: schedules,
     };
 
-    const localData = {
-      id: medicineId,
-      name: medicineName,
-      category,
-      count,
-      times,
-      days,
-      period,
-      remain,
-      memo,
-      date: today,
-      status: 'before' as const,
-    };
     try {
       if (isEdit) {
-        await axios.put(`${API_BASE_URL}/medicines/${editData.id}`, apiData);
-
+        await axios.patch(`${API_BASE_URL}/medicines/${editData.id}`, apiData, {
+          withCredentials: true,
+        });
         console.log('약 수정 성공');
       } else {
-        const res = await axios.post(`${API_BASE_URL}/medicines`, apiData);
-
+        const res = await axios.post(`${API_BASE_URL}/medicines`, apiData, {
+          withCredentials: true,
+        });
         console.log('약 등록 성공', res.data);
+
+        // 서버 GET 버그 우회: 로컬 캐시에 저장
+        const newId =
+          res.data?.data?.id ??
+          res.data?.data?.medicineId ??
+          res.data?.id ??
+          res.data?.medicineId;
+        console.log('[LocalStore] newId:', newId, '| res.data:', JSON.stringify(res.data));
+        const newMed = {
+          id: newId,
+          name: res.data?.data?.name ?? res.data?.name ?? medicineName,
+          startDate: undefined, // 날짜 필터 우회 — 로컬 저장 약은 즉시 표시
+          endDate: undefined,
+          category: apiData.category,
+          caution: apiData.caution,
+          dailyDoseCount: apiData.dailyDoseCount,
+          durationDays: apiData.durationDays,
+          totalQuantity: apiData.totalQuantity,
+          schedules: apiData.schedules,
+        };
+        addLocalMedicine(newMed);
+
+        // ScheduleContext 동기화 (CalendarScreen은 사용 안 하지만 유지)
+        const calendarEntries = schedules.map((s: any) => ({
+          medicineId: String(newId),
+          dayIndex: s.dayOfWeek % 7,
+          hourIndex: (parseInt(s.intakeTime.split(':')[0], 10) - 7 + 24) % 24,
+        }));
+        addSchedules(calendarEntries);
       }
 
       navigation.goBack();
     } catch (error: any) {
-      console.log('약 저장 실패', error);
-      console.log(error.response?.data);
+      const status = error.response?.status;
+      const data = error.response?.data;
+      console.log('약 저장 실패', status, data, error.message);
+      const msg =
+        status === 401 ? '로그인이 필요합니다. 다시 로그인해주세요.' :
+        status === 403 ? '권한이 없습니다.' :
+        status === 400 ? `입력값 오류: ${JSON.stringify(data)}` :
+        data?.message ?? error.message ?? '서버에 연결할 수 없습니다.';
+      Alert.alert(`저장 실패 (${status ?? 'network'})`, msg);
     }
   };
 

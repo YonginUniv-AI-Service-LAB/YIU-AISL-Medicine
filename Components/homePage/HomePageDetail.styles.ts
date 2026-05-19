@@ -91,7 +91,7 @@ export const styles = StyleSheet.create({
   chartCenterContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    height: hp(240),
+    height: wp(260),
     position: 'relative',
   },
   chartTextOverlay: {

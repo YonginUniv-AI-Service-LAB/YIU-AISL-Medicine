@@ -1,7 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCallback } from 'react';
+import { setTodayMedicines } from '../CalendarPage/todayMedicineStore';
 import {
   View,
   Text,
@@ -15,20 +16,17 @@ import { useNavigation } from '@react-navigation/native';
 import styles from './MedicinePage.style';
 import CalendarPopup from './calendarPopup';
 
-import { useMedicine } from '../../contexts/MedicineContext';
-import { MedicineSchedule } from '../../contexts/MedicineContext';
 import { useSchedule } from '../../contexts/ScheduleContext';
 
 import axios from 'axios';
 import { API_BASE_URL } from '../../constants/api';
+import { getLocalMedicines, removeLocalMedicine } from '../CalendarPage/localMedicineStore';
 
 
 
 const MedicinePage: React.FC = () => {
   const navigation = useNavigation<any>();
-  const { removeSchedulesByMedicineId } = useSchedule();
-  const { medicines, removeMedicine, updateStatus } = useMedicine();
-  const { schedules } = useSchedule();
+  const { removeSchedulesByMedicineId, syncSchedules } = useSchedule();
   const handleDeleteMedicine = (medicineId: number) => {
     deleteMedicineApi(medicineId);
   };
@@ -87,6 +85,7 @@ const MedicinePage: React.FC = () => {
   const [selectedMedicineId, setSelectedMedicineId] = useState<number | null>(
     null,
   );
+  const [selectedIntakeId, setSelectedIntakeId] = useState<number | null>(null);
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
   const [confirmType, setConfirmType] = useState<'edit' | 'delete' | null>(
     null,
@@ -101,12 +100,12 @@ const MedicinePage: React.FC = () => {
   };
 
   const updateLocalStatus = (
-    medicineId: number, // medicineId 타입 지정
-    status: 'done' | 'before' | 'missed', // status 타입 지정
+    intakeId: number,
+    status: 'done' | 'before' | 'missed',
   ) => {
     setApiMedicines((prev) =>
       prev.map((m) => {
-        if (m.id !== medicineId) return m;
+        if (m.intakeId !== intakeId) return m;
 
         let newQuantity = m.totalQuantity;
 
@@ -129,7 +128,7 @@ const MedicinePage: React.FC = () => {
   ) => {
     const statusMap: { [key: string]: string } = {
       done: 'TAKEN',
-      before: 'PENDING',
+      before: 'BEFORE',
       missed: 'MISSED',
     };
 
@@ -154,22 +153,31 @@ const MedicinePage: React.FC = () => {
 
   const deleteMedicineApi = async (medicineId: number) => {
     try {
-      await axios.delete(`${API_BASE_URL}/medicines/${medicineId}`);
+      await axios.delete(`${API_BASE_URL}/medicines/${medicineId}`, {
+        withCredentials: true,
+      });
       console.log('약 삭제 성공');
 
-      // 화면에서도 삭제
       setApiMedicines((prev) => prev.filter((m) => m.id !== medicineId));
+      removeSchedulesByMedicineId(String(medicineId));
+
+      removeLocalMedicine(medicineId);
     } catch (error) {
       console.log('약 삭제 실패', error);
     }
   };
 
-  const selectedDateString =
-    baseDate.getFullYear() +
-    '-' +
-    String(baseDate.getMonth() + 1).padStart(2, '0') +
-    '-' +
-    String(baseDate.getDate()).padStart(2, '0');
+
+
+  useEffect(() => {
+    const dateStr =
+      baseDate.getFullYear() +
+      '-' +
+      String(baseDate.getMonth() + 1).padStart(2, '0') +
+      '-' +
+      String(baseDate.getDate()).padStart(2, '0');
+    setTodayMedicines(apiMedicines, dateStr);
+  }, [apiMedicines, baseDate]);
 
   const todayMedicines = apiMedicines;
 
@@ -181,9 +189,7 @@ const MedicinePage: React.FC = () => {
 
       const user = res.data?.data;
 
-      if (user?.name) {
-        setUserName(user.name);
-      }
+      if (user?.name) setUserName(user.name);
     } catch (error) {
       console.log('사용자 조회 실패', error);
     }
@@ -193,59 +199,133 @@ const MedicinePage: React.FC = () => {
     useCallback(() => {
       fetchUser();
 
+      const selectedDateString =
+        baseDate.getFullYear() +
+        '-' +
+        String(baseDate.getMonth() + 1).padStart(2, '0') +
+        '-' +
+        String(baseDate.getDate()).padStart(2, '0');
+
       const fetchMedicines = async () => {
         try {
-          const res = await axios.get(`${API_BASE_URL}/medicines`, {
-            withCredentials: true,
-          });
+          // 주 소스: GET /users/{id}/calendar/weekly (GET /medicines, /daily, /intakes 모두 서버 버그로 [] 반환)
+          const meRes = await axios.get(`${API_BASE_URL}/users/me`, { withCredentials: true });
+          const userId = meRes.data?.data?.id ?? meRes.data?.id;
 
-          console.log('서버에서 받은 약 목록', res.data);
+          const calRes = await axios.get(
+            `${API_BASE_URL}/users/${userId}/calendar/weekly?date=${selectedDateString}`,
+            { withCredentials: true },
+          );
+          console.log('[복용예정] weekly 원시 응답:', JSON.stringify(calRes.data));
 
-          const data = res.data?.data ?? res.data;
+          const weekData = calRes.data?.data ?? calRes.data;
+          const calendarDays: any[] = weekData?.calendar ?? [];
 
-          // 서버 status → 프론트 status 변환
-          const converted = data.map((m: any) => {
+          // 오늘 날짜 항목만 추출
+          const todayEntry = calendarDays.find((day: any) => day.date === selectedDateString);
+          const todayMeds: any[] = todayEntry?.medicines ?? [];
+          console.log('[복용예정] 오늘 약:', todayMeds.map((m: any) => m.medicineName ?? m.name));
+
+          // 각 약의 상세정보 GET /medicines/{id}
+          const detailMap: Record<string, any> = {};
+          await Promise.allSettled(
+            todayMeds.map(async (med: any) => {
+              try {
+                const res = await axios.get(`${API_BASE_URL}/medicines/${med.medicineId}`, { withCredentials: true });
+                detailMap[String(med.medicineId)] = res.data?.data ?? res.data;
+              } catch (e) {
+                console.log(`GET /medicines/${med.medicineId} 실패`, e);
+              }
+            }),
+          );
+
+          // GET /intakes — 복용 상태 보조 소스 (빈 배열이어도 무시)
+          const intakeMap: Record<string, any> = {};
+          try {
+            const intakesRes = await axios.get(`${API_BASE_URL}/intakes?date=${selectedDateString}`, { withCredentials: true });
+            const raw = intakesRes.data?.data ?? intakesRes.data;
+            (raw?.intakes ?? []).forEach((i: any) => { intakeMap[String(i.medicineId)] = i; });
+          } catch (e) { /* 무시 */ }
+
+          const converted = todayMeds.map((med: any) => {
+            const detail = detailMap[String(med.medicineId)] ?? {};
+            const intake = intakeMap[String(med.medicineId)];
+            const firstTime = intake?.scheduledTime ?? med.intakeTimes?.[0] ?? detail.schedules?.[0]?.intakeTime ?? '08:00';
             let status = 'before';
-
-            if (m.status === 'TAKEN') status = 'done';
-            if (m.status === 'MISSED') status = 'missed';
-            if (m.status === 'PENDING') status = 'before';
-
+            if (intake?.status === 'TAKEN') status = 'done';
+            else if (intake?.status === 'NOT_TAKEN' || intake?.status === 'MISSED') status = 'missed';
             return {
-              ...m,
+              ...detail,
+              id: med.medicineId,
+              name: med.medicineName ?? detail.name,
+              intakeId: intake?.intakeId,
+              intakeTime: firstTime,
               status,
+              schedules: detail.schedules ?? [],
             };
           });
 
-          const grouped = groupMedicines(converted);
+          // 서버 GET 버그 우회: 로컬 인메모리 캐시에서 보충
+          const localMeds = getLocalMedicines();
+          console.log('[복용예정] 로컬 캐시:', localMeds.length, '개', localMeds.map(m => m.name));
+          if (localMeds.length > 0) {
+            const serverIds = new Set(converted.map((m: any) => String(m.id)));
+            const jsDay = new Date(selectedDateString + 'T00:00:00').getDay();
+            const serverDay = jsDay === 0 ? 7 : jsDay;
+            console.log('[복용예정] serverDay:', serverDay, '| serverIds:', [...serverIds]);
 
-          const withLocalStatus = await applySavedStatus(grouped);
+            const localToday = localMeds
+              .filter((m) => {
+                if (serverIds.has(String(m.id))) {
+                  console.log(`[복용예정] 필터-서버중복: ${m.name} (id=${m.id})`);
+                  return false;
+                }
+                // 로컬 약은 서버 반영 전 임시 표시 → 요일 무관하게 오늘 항상 표시
+                return true;
+              })
+              .map((m) => ({
+                ...m,
+                intakeTime: m.schedules?.[0]?.intakeTime?.substring(0, 5) ?? '08:00',
+                status: 'before',
+                intakeId: undefined,
+              }));
+            converted.push(...localToday);
+          }
+
+          console.log('[복용예정] 표시할 약:', converted.map((m: any) => m.name));
+          const withLocalStatus = await applySavedStatus(converted);
           setApiMedicines(withLocalStatus);
+
+          // 캘린더 주간 일정 동기화 — 이미 가져온 calendarDays 재활용
+          try {
+            const calendarSchedules: import('../../contexts/ScheduleContext').Schedule[] = [];
+            calendarDays.forEach((dayEntry: any) => {
+              const [y, m, d] = dayEntry.date.split('-').map(Number);
+              const dayIndex = new Date(y, m - 1, d).getDay();
+              (dayEntry.medicines ?? []).forEach((medicine: any) => {
+                (medicine.intakeTimes ?? []).forEach((time: string) => {
+                  const hour = parseInt(time.split(':')[0], 10);
+                  const hourIndex = (hour - 7 + 24) % 24;
+                  calendarSchedules.push({
+                    medicineId: String(medicine.medicineId),
+                    dayIndex,
+                    hourIndex,
+                  });
+                });
+              });
+            });
+            syncSchedules(calendarSchedules);
+          } catch (e) {
+            console.log('캘린더 일정 동기화 실패', e);
+          }
         } catch (error) {
           console.log('약 목록 불러오기 실패', error);
         }
       };
 
       fetchMedicines();
-    }, []),
+    }, [baseDate]),
   );
-
-  const groupMedicines = (data: any[]) => {
-    const map = new Map();
-
-    data.forEach((item) => {
-      if (!map.has(item.id)) {
-        map.set(item.id, {
-          ...item,
-          schedules: [],
-        });
-      }
-
-      map.get(item.id).schedules.push(...(item.schedules ?? []));
-    });
-
-    return Array.from(map.values());
-  };
 
   const weekData = useMemo(() => {
     const today = new Date();
@@ -414,9 +494,13 @@ const MedicinePage: React.FC = () => {
 
                     <TouchableOpacity
                       onPress={() => {
-                        const intakeId = item.schedules?.[0]?.id;
+                        if (!item.intakeId) {
+                          alert('복용 기록이 없습니다.');
+                          return;
+                        }
 
-                        setSelectedMedicineId(intakeId);
+                        setSelectedMedicineId(item.id);
+                        setSelectedIntakeId(item.intakeId);
                         setSelectedStatus(item.status ?? 'before');
 
                         setStatusModalVisible(true);
@@ -594,24 +678,18 @@ const MedicinePage: React.FC = () => {
                 <TouchableOpacity
                   style={styles.confirmBtn}
                   onPress={() => {
-                    if (selectedMedicineId) {
-                      const intakeId = Number(selectedMedicineId);
-
-                      const medicine = apiMedicines.find((m) =>
-                        m.schedules?.some((s: any) => s.id === intakeId),
+                    if (selectedMedicineId && selectedIntakeId) {
+                      const medicine = apiMedicines.find(
+                        (m) => m.id === selectedMedicineId,
                       );
                       const newQuantity =
                         selectedStatus === 'done'
                           ? Math.max((medicine?.totalQuantity ?? 0) - 1, 0)
                           : (medicine?.totalQuantity ?? 0);
 
-                      const medicineId = medicine?.id;
-
-                      updateLocalStatus(medicineId, selectedStatus);
-
-                      saveStatusLocal(medicineId, selectedStatus, newQuantity);
-
-                      updateStatusApi(intakeId, selectedStatus);
+                      updateLocalStatus(selectedMedicineId, selectedStatus);
+                      saveStatusLocal(selectedMedicineId, selectedStatus, newQuantity);
+                      updateStatusApi(selectedIntakeId, selectedStatus);
                     }
 
                     setStatusModalVisible(false);

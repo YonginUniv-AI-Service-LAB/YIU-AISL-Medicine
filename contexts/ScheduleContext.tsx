@@ -10,12 +10,15 @@ type ScheduleContextType = {
   schedules: Schedule[];
   addSchedules: (newSchedules: Schedule[]) => void;
   removeSchedulesByMedicineId: (medicineId: string) => void; // ⭐ 삭제용
+  // API에서 불러온 약 일정 전체를 덮어쓸 때 사용 (MedicinePage → CalendarPage 동기화)
+  syncSchedules: (newSchedules: Schedule[]) => void;
 };
 
 const ScheduleContext = createContext<ScheduleContextType>({
   schedules: [],
   addSchedules: () => {},
   removeSchedulesByMedicineId: () => {},
+  syncSchedules: () => {},
 });
 
 export const ScheduleProvider = ({ children }: any) => {
@@ -47,9 +50,14 @@ export const ScheduleProvider = ({ children }: any) => {
     setSchedules((prev) => prev.filter((s) => s.medicineId !== medicineId));
   };
 
+  // API 약 목록을 불러올 때 캘린더 일정 전체를 덮어씀 (MedicinePage에서 호출)
+  const syncSchedules = (newSchedules: Schedule[]) => {
+    setSchedules(newSchedules);
+  };
+
   return (
     <ScheduleContext.Provider
-      value={{ schedules, addSchedules, removeSchedulesByMedicineId }}
+      value={{ schedules, addSchedules, removeSchedulesByMedicineId, syncSchedules }}
     >
       {children}
     </ScheduleContext.Provider>

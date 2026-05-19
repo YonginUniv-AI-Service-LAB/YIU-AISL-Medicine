@@ -20,6 +20,7 @@ import { API_BASE_URL } from './constants/api';
 axios.defaults.baseURL = API_BASE_URL;
 axios.defaults.withCredentials = true;
 axios.defaults.timeout = 20000;
+axios.defaults.headers.common['bypass-tunnel-reminder'] = 'true';
 
 // 자동 숨김 방지 (앱 시작 시 1회)
 SplashScreen.preventAutoHideAsync();

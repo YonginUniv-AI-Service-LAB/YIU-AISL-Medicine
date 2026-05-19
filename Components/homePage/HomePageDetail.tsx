@@ -15,6 +15,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Circle, G } from 'react-native-svg';
 import axios from 'axios';
 import { API_BASE_URL } from '../../constants/api';
+import { getLocalMedicines } from '../CalendarPage/localMedicineStore';
+import { getTodayMedicineCounts } from '../CalendarPage/todayMedicineStore';
 import { styles } from './HomePageDetail.styles';
 import MenuPopup from './MenuPopup';
 import SituationPopup from './SituationPopup';
@@ -40,6 +42,24 @@ const ChartSegment = ({
   isSelected,
   onPress,
 }: any) => {
+  const feedbackRadius = isSelected ? RADIUS + wp(4) : RADIUS;
+  const sweep = endAngle - startAngle;
+
+  // SVG arc 명령은 360°를 그릴 수 없으므로 전체 원인 경우 Circle로 대체
+  if (sweep >= 359) {
+    return (
+      <G onPressIn={onPress}>
+        <Circle
+          cx={CENTER}
+          cy={CENTER}
+          r={feedbackRadius}
+          fill={color}
+          opacity={isSelected ? 1 : 0.6}
+        />
+      </G>
+    );
+  }
+
   const getPathData = (s: number, e: number, r: number) => {
     const x1 = CENTER + r * Math.cos((Math.PI * (s - 0.1)) / 180);
     const y1 = CENTER + r * Math.sin((Math.PI * (s - 0.1)) / 180);
@@ -51,8 +71,6 @@ const ChartSegment = ({
 
     return `M ${CENTER} ${CENTER} L ${x1} ${y1} A ${r} ${r} 0 ${largeArcFlag} 1 ${x2} ${y2} Z`;
   };
-
-  const feedbackRadius = isSelected ? RADIUS + wp(4) : RADIUS;
 
   return (
     <G onPressIn={onPress}>
@@ -87,7 +105,8 @@ export default function HomeDetailPage() {
     'logout',
   );
 
-  const today = new Date().toISOString().split('T')[0];
+  const _now = new Date();
+  const today = `${_now.getFullYear()}-${String(_now.getMonth() + 1).padStart(2, '0')}-${String(_now.getDate()).padStart(2, '0')}`;
 
   /*
   ========================
@@ -119,57 +138,82 @@ export default function HomeDetailPage() {
 
   const fetchMedicationData = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/intakes?date=${today}`, {
-        withCredentials: true,
-      });
+      // 약관리 페이지가 이미 오늘 데이터를 로드했으면 그 결과를 우선 사용
+      const storeResult = getTodayMedicineCounts(today);
+      if (storeResult.hasData) {
+        setSegments([
+          { label: '복용 완료', count: storeResult.taken, color: '#1bef18', detail: '복용 완료 약' },
+          { label: '미복용', count: storeResult.missed, color: '#c90d0d', detail: '미복용 약' },
+          { label: '복용 전', count: storeResult.before, color: '#227fbd', detail: '복용 예정 약' },
+        ]);
+        return;
+      }
 
-      const intakes = res.data?.data || [];
+      const jsDay = new Date(today + 'T00:00:00').getDay();
+      const serverDay = jsDay === 0 ? 7 : jsDay;
 
-      // AsyncStorage 상태 불러오기
-      const stored = await AsyncStorage.getItem('medicineStatus');
-      const savedStatus = stored ? JSON.parse(stored) : {};
+      // 1. 오늘 약 목록 (weekly API)
+      let todayMedIds: string[] = [];
+      try {
+        const meRes = await axios.get(`${API_BASE_URL}/users/me`, { withCredentials: true });
+        const userId = meRes.data?.data?.id ?? meRes.data?.id;
+        const calRes = await axios.get(
+          `${API_BASE_URL}/users/${userId}/calendar/weekly?date=${today}`,
+          { withCredentials: true },
+        );
+        const weekData = calRes.data?.data ?? calRes.data;
+        const calendarDays: any[] = weekData?.calendar ?? [];
+        const todayEntry = calendarDays.find((day: any) => day.date === today);
+        todayMedIds = (todayEntry?.medicines ?? []).map((m: any) => String(m.medicineId));
+      } catch (e) {
+        console.log('weekly API 실패', e);
+      }
 
-      let taken = 0;
-      let notTaken = 0;
-      let before = 0;
+      // 2. 서버 intakes 배열에서 medicineId별 상태 읽기 (MedicinePage와 동일)
+      const intakeStatusMap: Record<string, string> = {};
+      try {
+        const intakesRes = await axios.get(`${API_BASE_URL}/intakes?date=${today}`, { withCredentials: true });
+        const raw = intakesRes.data?.data ?? intakesRes.data;
+        (raw?.intakes ?? []).forEach((i: any) => {
+          let s = 'before';
+          if (i.status === 'TAKEN') s = 'done';
+          else if (i.status === 'NOT_TAKEN' || i.status === 'MISSED') s = 'missed';
+          intakeStatusMap[String(i.medicineId)] = s;
+        });
+      } catch (e) {}
 
-      intakes.forEach((item: any) => {
-        const medicineId = item.medicineId ?? item.medicine?.id ?? item.id;
+      // 3. AsyncStorage 저장값으로 오버라이드 (MedicinePage의 복용선택하기 결과)
+      try {
+        const stored = await AsyncStorage.getItem('medicineStatus');
+        if (stored) {
+          const saved = JSON.parse(stored);
+          Object.keys(saved).forEach((id) => {
+            intakeStatusMap[id] = saved[id].status;
+          });
+        }
+      } catch (e) {}
 
-        const localStatus = savedStatus[medicineId]?.status;
+      // 4. 로컬 스토어 약 (intakeId 없어서 상태 변경 불가 → 항상 before)
+      const serverIdSet = new Set(todayMedIds);
+      const localCount = getLocalMedicines().filter((m) => {
+        if (serverIdSet.has(String(m.id))) return false;
+        const days = (m.schedules ?? []).map((s) => s.dayOfWeek);
+        return days.length === 0 || days.includes(serverDay);
+      }).length;
 
-        const status = localStatus
-          ? localStatus
-          : item.status === 'TAKEN'
-            ? 'done'
-            : item.status === 'NOT_TAKEN'
-              ? 'missed'
-              : 'before';
-
+      // 5. 집계
+      let taken = 0, missed = 0, before = localCount;
+      todayMedIds.forEach((id) => {
+        const status = intakeStatusMap[id] ?? 'before';
         if (status === 'done') taken++;
-        else if (status === 'missed') notTaken++;
+        else if (status === 'missed') missed++;
         else before++;
       });
 
       setSegments([
-        {
-          label: '복용 완료',
-          count: taken,
-          color: '#1bef18',
-          detail: '복용 완료 약',
-        },
-        {
-          label: '미복용',
-          count: notTaken,
-          color: '#c90d0d',
-          detail: '미복용 약',
-        },
-        {
-          label: '복용 전',
-          count: before,
-          color: '#227fbd',
-          detail: '복용 예정 약',
-        },
+        { label: '복용 완료', count: taken, color: '#1bef18', detail: '복용 완료 약' },
+        { label: '미복용', count: missed, color: '#c90d0d', detail: '미복용 약' },
+        { label: '복용 전', count: before, color: '#227fbd', detail: '복용 예정 약' },
       ]);
     } catch (error) {
       console.log('복약 데이터 조회 실패', error);
@@ -288,14 +332,18 @@ export default function HomeDetailPage() {
                 viewBox={`0 0 ${wp(180)} ${wp(180)}`}
               >
                 <G>
-                  {chartSegments.map((seg, idx) => (
-                    <ChartSegment
-                      key={idx}
-                      {...seg}
-                      isSelected={selectedIndex === idx}
-                      onPress={() => setSelectedIndex(idx)}
-                    />
-                  ))}
+                  {total === 0 ? (
+                    <Circle cx={CENTER} cy={CENTER} r={RADIUS} fill="#D9D9D9" opacity={0.6} />
+                  ) : (
+                    chartSegments.map((seg, idx) => (
+                      <ChartSegment
+                        key={idx}
+                        {...seg}
+                        isSelected={selectedIndex === idx}
+                        onPress={() => setSelectedIndex(idx)}
+                      />
+                    ))
+                  )}
 
                   <Circle cx={CENTER} cy={CENTER} r={wp(46)} fill="white" />
                 </G>
