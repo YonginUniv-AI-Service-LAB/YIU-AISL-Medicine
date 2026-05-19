@@ -2,7 +2,7 @@ import { useFriend } from '../../contexts/FriendContext';
 import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useFocusEffect } from '@react-navigation/native'; // ✅ 추가
+import { useFocusEffect } from '@react-navigation/native';
 import { styles } from './SharePage.style';
 
 import FrendPopup from './FrendPopup';
@@ -12,7 +12,6 @@ import GuestBookPopup from './GuestBookPopup';
 import GuestBookCard from './GuestBookCard';
 import CalendarPopup from './CalenderPopup22';
 
-// ✅ 이미지 캐싱 (성능)
 const LOGO = require('../../assets/images/Logo.png');
 const SEARCH_ICON = require('../../assets/images/share/search.png');
 const SHARE_ON = require('../../assets/images/share/share_on.png');
@@ -22,8 +21,12 @@ const CALENDAR_ICON = require('../../assets/images/share/calender.png');
 const FRIEND_ON = require('../../assets/images/share/frend_on.png');
 const FRIEND_OFF = require('../../assets/images/share/frend_off.png');
 
-export default function SharePage({ navigation }: any) {
-  const { friends, fetchFriends, friendRequests, fetchFriendRequests, removeFriend } = useFriend();
+export default function SharePage() {
+  const {
+    friends, fetchFriends, fetchFriendRequests, removeFriend,
+    myUserId, fetchGuestbook, postGuestbook, deleteGuestbook,
+  } = useFriend();
+
   const [isPopupVisible, setIsPopupVisible] = useState(false);
   const [isAddPopupVisible, setIsAddPopupVisible] = useState(false);
   const [isSelectPopupVisible, setIsSelectPopupVisible] = useState(false);
@@ -32,32 +35,31 @@ export default function SharePage({ navigation }: any) {
 
   const [isFriendView, setIsFriendView] = useState(false);
   const [targetEmail, setTargetEmail] = useState('');
-  const [friendList, setFriendList] = useState<string[]>([]);
+  const [targetFriendId, setTargetFriendId] = useState<number | null>(null);
 
-  const [myGuestMessages, setMyGuestMessages] = useState<any[]>([
-    {
-      id: '1',
-      date: '24.02.19 10:00',
-      senderEmail: 'tester@abc.com',
-      message: '반갑습니다! 좋은 하루 되세요.',
-    },
-  ]);
+  const [myGuestMessages, setMyGuestMessages] = useState<any[]>([]);
   const [friendGuestMessages, setFriendGuestMessages] = useState<any[]>([]);
 
+  // 내 방명록 로드
   useEffect(() => {
-    fetchFriends();
-    fetchFriendRequests();
-  }, []);
-  // ✅ 🔥 핵심: 상세페이지 갔다 돌아오면 모든 Modal 초기화
+    if (myUserId) {
+      fetchGuestbook(myUserId).then(setMyGuestMessages);
+    }
+  }, [myUserId]);
+
   useFocusEffect(
     useCallback(() => {
-      fetchFriends(); //
+      fetchFriends();
+      fetchFriendRequests();
+      if (myUserId) {
+        fetchGuestbook(myUserId).then(setMyGuestMessages);
+      }
       setIsCalendarVisible(false);
       setIsPopupVisible(false);
       setIsAddPopupVisible(false);
       setIsSelectPopupVisible(false);
       setIsGuestBookVisible(false);
-    }, []),
+    }, [myUserId]),
   );
 
   const handleTestSwitch = useCallback((email: string) => {
@@ -66,61 +68,77 @@ export default function SharePage({ navigation }: any) {
     setTimeout(() => setIsSelectPopupVisible(true), 300);
   }, []);
 
-  const handleAddFriend = useCallback((email: string) => {
-    setFriendList((prev) => (prev.includes(email) ? prev : [...prev, email]));
-  }, []);
+  const handleAddFriend = useCallback((_email: string) => {
+    fetchFriends();
+  }, [fetchFriends]);
 
-  const handleOpenWriteGuestBook = useCallback((email: string) => {
-    setTargetEmail(email);
+  const handleOpenWriteGuestBook = useCallback(async (nickname: string) => {
+    setTargetEmail(nickname);
     setIsPopupVisible(false);
     setIsFriendView(true);
 
+    const friend = friends.find(f => f.nickname === nickname);
+    if (friend) {
+      setTargetFriendId(friend.friendId);
+      const entries = await fetchGuestbook(friend.friendId);
+      setFriendGuestMessages(entries);
+    }
+
     setTimeout(() => setIsGuestBookVisible(true), 200);
-  }, []);
+  }, [friends, fetchGuestbook]);
 
-  const handleViewCalendar = useCallback((email: string) => {
-    setTargetEmail(email);
-
-    // ✅ 다른 팝업 먼저 전부 닫기 (중요)
+  const handleViewCalendar = useCallback(async (nickname: string) => {
+    setTargetEmail(nickname);
     setIsPopupVisible(false);
     setIsGuestBookVisible(false);
     setIsAddPopupVisible(false);
     setIsSelectPopupVisible(false);
-
     setIsFriendView(true);
 
-    setTimeout(() => {
-      setIsCalendarVisible(true);
-    }, 200);
-  }, []);
+    const friend = friends.find(f => f.nickname === nickname);
+    if (friend) {
+      setTargetFriendId(friend.friendId);
+      const entries = await fetchGuestbook(friend.friendId);
+      setFriendGuestMessages(entries);
+    }
 
-  const handleGuestBookSubmit = useCallback((message: string) => {
-    const now = new Date();
-    const dateString = `${String(now.getFullYear()).slice(-2)}.${String(
-      now.getMonth() + 1,
-    ).padStart(2, '0')}.${String(now.getDate()).padStart(
-      2,
-      '0',
-    )} ${String(now.getHours()).padStart(2, '0')}:${String(
-      now.getMinutes(),
-    ).padStart(2, '0')}`;
+    setTimeout(() => setIsCalendarVisible(true), 200);
+  }, [friends, fetchGuestbook]);
 
-    const newMessage = {
-      id: Date.now().toString(),
-      date: dateString,
-      senderEmail: '나(Me)',
-      message,
-    };
-
-    setFriendGuestMessages((prev) => [newMessage, ...prev]);
+  const handleGuestBookSubmit = useCallback(async (message: string) => {
+    if (targetFriendId) {
+      try {
+        await postGuestbook(targetFriendId, message);
+        const entries = await fetchGuestbook(targetFriendId);
+        setFriendGuestMessages(entries);
+      } catch (e) {
+        console.error('방명록 작성 실패:', e);
+      }
+    }
     setIsGuestBookVisible(false);
-  }, []);
+  }, [targetFriendId, postGuestbook, fetchGuestbook]);
+
+  const handleDeleteMyGuestbook = useCallback(async (id: string) => {
+    try {
+      await deleteGuestbook(id);
+      if (myUserId) {
+        const entries = await fetchGuestbook(myUserId);
+        setMyGuestMessages(entries);
+      }
+    } catch (e) {
+      console.error('방명록 삭제 실패:', e);
+    }
+  }, [deleteGuestbook, fetchGuestbook, myUserId]);
 
   const resetToMe = useCallback(() => {
     setIsFriendView(false);
     setTargetEmail('');
+    setTargetFriendId(null);
     setFriendGuestMessages([]);
-  }, []);
+    if (myUserId) {
+      fetchGuestbook(myUserId).then(setMyGuestMessages);
+    }
+  }, [myUserId, fetchGuestbook]);
 
   const currentData = isFriendView ? friendGuestMessages : myGuestMessages;
 
@@ -197,9 +215,7 @@ export default function SharePage({ navigation }: any) {
           <GuestBookCard
             data={item}
             showDelete={!isFriendView}
-            onDelete={(id) =>
-              setMyGuestMessages((prev) => prev.filter((m) => m.id !== id))
-            }
+            onDelete={handleDeleteMyGuestbook}
           />
         )}
         ListEmptyComponent={
