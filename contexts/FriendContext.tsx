@@ -100,7 +100,11 @@ export const FriendProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const fetchGuestbook = async (userId: number): Promise<Guestbook[]> => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/users/${userId}/guestbook`, { withCredentials: true });
+      const isSelf = myUserId !== null && userId === myUserId;
+      const url = isSelf
+        ? `${API_BASE_URL}/users/me/guestbook`
+        : `${API_BASE_URL}/users/${userId}/guestbook`;
+      const res = await axios.get(url, { withCredentials: true });
       const raw: any[] = res.data?.data ?? res.data ?? [];
       return (Array.isArray(raw) ? raw : []).map((entry: any) => ({
         id: String(entry.guestbookId),
@@ -113,8 +117,8 @@ export const FriendProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         senderEmail: entry.writerNickname ?? entry.senderNickname ?? '알수없음',
         message: entry.content ?? entry.message ?? '',
       }));
-    } catch (error) {
-      console.error('방명록 조회 실패:', error);
+    } catch (error: any) {
+      console.warn('방명록 조회 실패 userId:', userId, 'status:', error?.response?.status);
       return [];
     }
   };

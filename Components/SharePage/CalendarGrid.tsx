@@ -1,24 +1,64 @@
-import React, { useMemo, useCallback } from 'react';
-import { View, Text, TouchableOpacity, Image } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import React, { useMemo, useEffect, useState } from 'react';
+import { View, Text, Image, ActivityIndicator } from 'react-native';
+import axios from 'axios';
 
 import { styles } from './CalendarGrid.style';
 import { DAYS, HOURS } from '../CalendarPage/calendarData';
-import { useSchedule } from '../../contexts/ScheduleContext';
-import { useMedicine } from '../../contexts/MedicineContext'; // ✅ 추가
+import { API_BASE_URL } from '../../constants/api';
 
 const MEDICINE_ICON = require('../../assets/images/calendar/medicine_on.png');
 
+type LocalSchedule = { medicineId: string; dayIndex: number; hourIndex: number };
+
 interface Props {
   onClose?: () => void;
+  friendUserId?: number;
 }
 
-function CalendarGrid({ onClose }: Props) {
-  const { schedules } = useSchedule();
-  const { medicines } = useMedicine(); // ✅ 추가
-  const navigation = useNavigation<any>();
+function CalendarGrid({ friendUserId }: Props) {
+  const [schedules, setSchedules] = useState<LocalSchedule[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  // schedule 빠르게 찾기
+  useEffect(() => {
+    if (!friendUserId) return;
+    const fetch = async () => {
+      setLoading(true);
+      try {
+        const today = new Date();
+        const dateStr =
+          today.getFullYear() + '-' +
+          String(today.getMonth() + 1).padStart(2, '0') + '-' +
+          String(today.getDate()).padStart(2, '0');
+        const res = await axios.get(
+          `${API_BASE_URL}/users/${friendUserId}/calendar/weekly?date=${dateStr}`,
+          { withCredentials: true },
+        );
+        const weekData = res.data?.data ?? res.data;
+        const calendar: any[] = weekData?.calendar ?? (Array.isArray(weekData) ? weekData : []);
+
+        const parsed: LocalSchedule[] = [];
+        calendar.forEach((dayEntry: any) => {
+          const [y, m, d] = dayEntry.date.split('-').map(Number);
+          const dayIndex = new Date(y, m - 1, d).getDay();
+          (dayEntry.medicines ?? []).forEach((medicine: any) => {
+            const midStr = String(medicine.medicineId);
+            (medicine.intakeTimes ?? []).forEach((time: string) => {
+              const hour = parseInt(time.split(':')[0], 10);
+              const hourIndex = (hour - 7 + 24) % 24;
+              parsed.push({ medicineId: midStr, dayIndex, hourIndex });
+            });
+          });
+        });
+        setSchedules(parsed);
+      } catch (e: any) {
+        console.error('[친구캘린더] 실패:', e?.response?.status, JSON.stringify(e?.response?.data));
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetch();
+  }, [friendUserId]);
+
   const scheduleMap = useMemo(() => {
     const map = new Map();
     schedules.forEach((s) => {
@@ -27,34 +67,9 @@ function CalendarGrid({ onClose }: Props) {
     return map;
   }, [schedules]);
 
-  const handleCellPress = useCallback(
-    (hourIndex: number, dayIndex: number) => {
-      const key = `${dayIndex}-${hourIndex}`;
-      const schedule = scheduleMap.get(key);
-
-      if (!schedule) return;
-
-      // ✅ 🔥 핵심: medicine 찾기
-      const medicine = medicines.find(
-        (m) => String(m.id) === String(schedule.medicineId),
-      );
-
-      if (!medicine) {
-        console.log('약 데이터 없음', schedule);
-        return;
-      }
-
-      // ✅ Modal 닫기
-      onClose?.();
-
-      setTimeout(() => {
-        navigation.navigate('MedicineDetail', {
-          medicine,
-        });
-      }, 100);
-    },
-    [scheduleMap, medicines, navigation, onClose],
-  );
+  if (loading) {
+    return <ActivityIndicator style={{ marginVertical: 40 }} color="#0068FF" />;
+  }
 
   return (
     <View style={styles.container}>
@@ -71,28 +86,23 @@ function CalendarGrid({ onClose }: Props) {
         <View key={`row-${hourIndex}`} style={styles.row}>
           <Text style={styles.timeText}>{String(hour)}</Text>
 
-          {DAYS.map((day: string, dayIndex: number) => {
+          {DAYS.map((_day: string, dayIndex: number) => {
             const key = `${dayIndex}-${hourIndex}`;
-            const schedule = scheduleMap.get(key);
-            const isScheduled = !!schedule;
+            const isScheduled = scheduleMap.has(key);
 
             return (
-              <TouchableOpacity
+              <View
                 key={`cell-${hourIndex}-${dayIndex}`}
                 style={[
                   styles.cell,
                   (dayIndex === 0 || dayIndex === 6) && styles.weekendCell,
                   isScheduled && styles.activeCell,
                 ]}
-                onPress={() =>
-                  isScheduled && handleCellPress(hourIndex, dayIndex)
-                }
-                activeOpacity={isScheduled ? 0.7 : 1}
               >
                 {isScheduled && (
                   <Image source={MEDICINE_ICON} style={styles.cellIcon} />
                 )}
-              </TouchableOpacity>
+              </View>
             );
           })}
         </View>

@@ -7,7 +7,6 @@ import { styles } from './SharePage.style';
 
 import FrendPopup from './FrendPopup';
 import FrendAddPopup from './Frend_Add_Popup';
-import SelectPopup from './other_people/SelectPopup';
 import GuestBookPopup from './GuestBookPopup';
 import GuestBookCard from './GuestBookCard';
 import CalendarPopup from './CalenderPopup22';
@@ -29,7 +28,6 @@ export default function SharePage() {
 
   const [isPopupVisible, setIsPopupVisible] = useState(false);
   const [isAddPopupVisible, setIsAddPopupVisible] = useState(false);
-  const [isSelectPopupVisible, setIsSelectPopupVisible] = useState(false);
   const [isGuestBookVisible, setIsGuestBookVisible] = useState(false);
   const [isCalendarVisible, setIsCalendarVisible] = useState(false);
 
@@ -57,18 +55,11 @@ export default function SharePage() {
       setIsCalendarVisible(false);
       setIsPopupVisible(false);
       setIsAddPopupVisible(false);
-      setIsSelectPopupVisible(false);
       setIsGuestBookVisible(false);
     }, [myUserId]),
   );
 
-  const handleTestSwitch = useCallback((email: string) => {
-    setTargetEmail(email);
-    setIsAddPopupVisible(false);
-    setTimeout(() => setIsSelectPopupVisible(true), 300);
-  }, []);
-
-  const handleAddFriend = useCallback((_email: string) => {
+  const handleAddFriend = useCallback((_email?: string) => {
     fetchFriends();
   }, [fetchFriends]);
 
@@ -92,14 +83,11 @@ export default function SharePage() {
     setIsPopupVisible(false);
     setIsGuestBookVisible(false);
     setIsAddPopupVisible(false);
-    setIsSelectPopupVisible(false);
     setIsFriendView(true);
 
     const friend = friends.find(f => f.nickname === nickname);
     if (friend) {
       setTargetFriendId(friend.friendId);
-      const entries = await fetchGuestbook(friend.friendId);
-      setFriendGuestMessages(entries);
     }
 
     setTimeout(() => setIsCalendarVisible(true), 200);
@@ -149,9 +137,6 @@ export default function SharePage() {
         <Image source={LOGO} style={styles.headerLogo} />
 
         <View style={styles.headerRight}>
-          <Text style={styles.userName}>000님</Text>
-          <Text style={styles.divider}>ㅣ</Text>
-
           <TouchableOpacity style={styles.meBox} onPress={resetToMe}>
             <Text style={styles.meText}>{isFriendView ? '공유' : 'ME'}</Text>
             <Image
@@ -241,7 +226,7 @@ export default function SharePage() {
           friendList={(friends ?? []).map(f => f.nickname)}
           onDelete={(nickname) => {
             const friend = friends.find(f => f.nickname === nickname);
-            if (friend) removeFriend(friend.friendId);
+            if (friend) removeFriend(friend.relationId ?? friend.friendId);
           }}
           onWriteGuestBook={handleOpenWriteGuestBook}
           onViewCalendar={handleViewCalendar}
@@ -256,6 +241,7 @@ export default function SharePage() {
           onClose={() => setIsCalendarVisible(false)}
           userName={targetEmail}
           isEditable={!isFriendView}
+          friendUserId={targetFriendId ?? undefined}
         />
       )}
 
@@ -272,16 +258,7 @@ export default function SharePage() {
         <FrendAddPopup
           visible={true}
           onClose={() => setIsAddPopupVisible(false)}
-          onConfirm={handleTestSwitch}
-        />
-      )}
-
-      {isSelectPopupVisible && (
-        <SelectPopup
-          visible={true}
-          onClose={() => setIsSelectPopupVisible(false)}
-          senderEmail={targetEmail}
-          onAccept={handleAddFriend}
+          onConfirm={handleAddFriend}
         />
       )}
     </SafeAreaView>

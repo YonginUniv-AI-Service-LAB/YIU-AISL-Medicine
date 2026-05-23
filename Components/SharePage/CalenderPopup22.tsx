@@ -15,9 +15,10 @@ interface Props {
   onClose: () => void;
   userName: string;
   isEditable: boolean;
+  friendUserId?: number;
 }
 
-export default function CalendarPopup({ visible, onClose, userName }: Props) {
+export default function CalendarPopup({ visible, onClose, userName, friendUserId }: Props) {
   return (
     <Modal
       transparent
@@ -49,7 +50,7 @@ export default function CalendarPopup({ visible, onClose, userName }: Props) {
 
           <ScrollView showsVerticalScrollIndicator={false}>
             {/* 🔥 여기 중요 */}
-            <CalendarGrid onClose={onClose} />
+            <CalendarGrid onClose={onClose} friendUserId={friendUserId} />
           </ScrollView>
 
           <TouchableOpacity style={styles.confirmButton} onPress={onClose}>
