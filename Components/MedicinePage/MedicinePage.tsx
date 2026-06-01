@@ -20,7 +20,7 @@ import { useSchedule } from '../../contexts/ScheduleContext';
 
 import axios from 'axios';
 import { API_BASE_URL } from '../../constants/api';
-import { getLocalMedicines, removeLocalMedicine } from '../CalendarPage/localMedicineStore';
+import { getLocalMedicines, removeLocalMedicine, loadLocalMedicines } from '../CalendarPage/localMedicineStore';
 
 
 
@@ -265,7 +265,8 @@ const MedicinePage: React.FC = () => {
             };
           });
 
-          // 서버 GET 버그 우회: 로컬 인메모리 캐시에서 보충
+          // 서버 GET 버그 우회: 로컬 인메모리 캐시에서 보충 (AsyncStorage 먼저 로드)
+          await loadLocalMedicines();
           const localMeds = getLocalMedicines();
           console.log('[복용예정] 로컬 캐시:', localMeds.length, '개', localMeds.map(m => m.name));
           if (localMeds.length > 0) {

@@ -42,9 +42,9 @@ export default function FrendAddPopup({ visible, onClose, onConfirm }: Props) {
       await axios.post(`${API_BASE_URL}/friends`, { email }, { withCredentials: true });
       alert("친구 신청을 보냈습니다!");
       setIsSent(true);
-    } catch (error) {
-      console.log('친구 신청 오류:', error);
-      alert("신청 실패");
+    } catch (error: any) {
+      const msg = error?.response?.data?.message ?? '';
+      alert(msg || '친구 신청에 실패했습니다.');
     }
   };
 
