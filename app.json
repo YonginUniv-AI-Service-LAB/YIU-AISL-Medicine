@@ -13,7 +13,8 @@
     "android": {
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "usesCleartextTraffic": true
+      "usesCleartextTraffic": true,
+      "package": "com.aisl.medicineroutine"
     },
     "web": {},
     "plugins": [
@@ -22,6 +23,11 @@
     "experiments": {
       "typedRoutes": false,
       "reactCompiler": false
+    },
+    "extra": {
+      "eas": {
+        "projectId": "f757e7d2-e0d9-43d4-a059-147e235cbaf1"
+      }
     }
   }
 }

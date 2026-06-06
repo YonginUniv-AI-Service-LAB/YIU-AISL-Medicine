@@ -2,7 +2,8 @@ import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 
 // 터널 URL 사용 시 여기에 입력 (localtunnel/ngrok), 아니면 null
-const TUNNEL_URL: string | null = 'https://mediroutine.serveousercontent.com';
+const TUNNEL_URL: string | null =
+  'https://yiu-aisl-medicine-server-production.up.railway.app';
 
 const getApiBaseUrl = (): string => {
   if (TUNNEL_URL) return TUNNEL_URL;
